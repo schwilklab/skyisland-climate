@@ -1,0 +1,62 @@
+1-Wire/iButton Part Number: DS1923
+1-Wire/iButton Registration Number: DC000000149BDE41
+Mission in Progress?  true
+SUTA Mission?  false
+Waiting for Temperature Alarm?  false
+Sample Rate:  Every 3600 second(s)
+Mission Start Time:  Fri Apr 04 19:55:01 CDT 2014
+Mission Sample Count:  42
+Roll Over Enabled?  false(no rollover occurred)
+First Sample Timestamp:  Fri Apr 04 19:55:01 CDT 2014
+Total Mission Samples:  42
+Total Device Samples:  44084
+Temperature Logging:  disabled
+Temperature High Alarm:  disabled
+Temperature Low Alarm:  disabled
+Data Logging:  0.6 %RH
+Data High Alarm:  disabled
+Data Low Alarm:  disabled
+
+Date/Time,Unit,Value
+4/4/14 7:55:01 PM,%RH,47.903
+4/4/14 8:55:01 PM,%RH,26.548
+4/4/14 9:55:01 PM,%RH,26.548
+4/4/14 10:55:01 PM,%RH,27.846
+4/4/14 11:55:01 PM,%RH,29.139
+4/5/14 12:55:01 AM,%RH,28.493
+4/5/14 1:55:01 AM,%RH,38.667
+4/5/14 2:55:01 AM,%RH,47.903
+4/5/14 3:55:01 AM,%RH,53.897
+4/5/14 4:55:01 AM,%RH,52.112
+4/5/14 5:55:01 AM,%RH,48.508
+4/5/14 6:55:01 AM,%RH,46.079
+4/5/14 7:55:01 AM,%RH,55.08
+4/5/14 8:55:01 AM,%RH,32.985
+4/5/14 9:55:01 AM,%RH,34.257
+4/5/14 10:55:01 AM,%RH,31.068
+4/5/14 11:55:01 AM,%RH,29.139
+4/5/14 12:55:01 PM,%RH,27.198
+4/5/14 1:55:01 PM,%RH,25.897
+4/5/14 2:55:01 PM,%RH,24.592
+4/5/14 3:55:01 PM,%RH,23.281
+4/5/14 4:55:01 PM,%RH,20.644
+4/5/14 5:55:01 PM,%RH,22.624
+4/5/14 6:55:01 PM,%RH,25.245
+4/5/14 7:55:01 PM,%RH,25.245
+4/5/14 8:55:01 PM,%RH,26.548
+4/5/14 9:55:01 PM,%RH,43.013
+4/5/14 10:55:01 PM,%RH,50.916
+4/5/14 11:55:01 PM,%RH,55.67
+4/6/14 12:55:01 AM,%RH,63.217
+4/6/14 1:55:01 AM,%RH,69.431
+4/6/14 2:55:01 AM,%RH,62.644
+4/6/14 3:55:01 AM,%RH,51.515
+4/6/14 4:55:01 AM,%RH,53.303
+4/6/14 5:55:01 AM,%RH,47.296
+4/6/14 6:55:01 AM,%RH,34.257
+4/6/14 7:55:01 AM,%RH,46.688
+4/6/14 8:55:01 AM,%RH,30.426
+4/6/14 9:55:01 AM,%RH,29.139
+4/6/14 10:55:01 AM,%RH,24.592
+4/6/14 11:55:01 AM,%RH,24.592
+4/6/14 12:55:01 PM,%RH,21.965

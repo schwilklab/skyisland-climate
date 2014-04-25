@@ -1,0 +1,7 @@
+change MD282 waypoint to match MD 283.  Both are now in 283-QUGR2
+
+mi023?  should this be mi034?  check.  funnel was relabeled as 23
+.  it is sensor south of mci
+
+
+

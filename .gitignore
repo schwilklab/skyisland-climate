@@ -1,0 +1,16 @@
+## folders to ignore
+# ignored spreadsheets for data entry.  These are created automatically
+/field-sheets/
+# ignore merged data created by scripts
+decagon/merged/*.csv
+microclimate/merged-ibutton/
+# ignore R data and history files
+.Rhistory
+.RData
+.directory
+# ignore pdfs and images by default
+*.pdf
+*.jpg
+#ignore spreasheets
+*.ods
+*.xls
