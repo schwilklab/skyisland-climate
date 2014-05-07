@@ -1,0 +1,8 @@
+variable,type,units,description
+sensor,string,,Sensor ID: Two letters and three digits. The first two letters indicate the trail or area.  see SensorMaster.csv
+date,string,,form MM/DD/YYYY. The soil collection date
+boat.id,string,,Weight boat number. Can be missing
+wb,numeric,g,Weigh boat weight
+wb.soil.wet,numeric,g,Weight of boat and wet soil
+wb.soil.dry,numeric,g,Weight of boat and dry soil
+gswc,numeric,,Gravimetric soil water content  ( ( wb.soil.wet - wb) - (wb.soil.dry - wb)) / (wb.soil.dry – wb).  Can be missing as the script will calculate it
