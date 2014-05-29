@@ -1,4 +1,4 @@
-sensor,type,mtn,gone,pair,lat,lon,elev,asp,asp2,type,note
+sensor,type,mtn,gone,pair,lat,lon,elev,asp,asp2,slopepos,note
 BC519,T,CM,,,29.2455,-103.29397,2047,S?,,midslope/valley,In JUNFLA between BC2 and BC3 campsites
 BC520,T,CM,,,29.23563,-103.29992,2165,NW?,,midslope,above trail in QUEGRI
 BC521,H,CM,,BC520,29.23563,-103.29992,2165,NW?,,midslope,above trail in QUEGRI
