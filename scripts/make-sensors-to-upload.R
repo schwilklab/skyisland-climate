@@ -2,7 +2,7 @@
 ## script to take snesor master list and output a csv file in correct format
 ## for uploading to the garmin gps units
 
-sensor.master <- read.csv("../microclimate/SensorMaster.csv")
+sensor.master <- read.csv("../microclimate/sensors.csv")
 sensor.master$gone <- ifelse(is.na(sensor.master$gone), FALSE,TRUE)
 clean.df <- subset(sensor.master, !gone)
 clean.df <- data.frame(name=clean.df$sensor,

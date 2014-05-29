@@ -308,7 +308,7 @@ dec2jan <- function(m){
 
 #### statistcs by sensor
 # read list of sensors stats (elevation, waypoints, etc
-sensors.raw <- read.csv("../SensorMaster.csv", header=TRUE, sep="\t")
+sensors.raw <- read.csv("../sensors.csv", header=TRUE, sep="\t")
 #sensors.raw$X <- NULL
 
 ## merge summaries with sensor location data
