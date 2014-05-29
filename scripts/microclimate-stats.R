@@ -4,16 +4,18 @@
 # single large csv file. build-merged-ibutton.py builds these single files from
 # a directory heirarchy of raw ibutton files.
 
-library(zoo)
+#library(zoo)
 library(ggplot2)
-library(chron)
+#library(chron)
 library(plyr)
 library(reshape2)
+library(lubridate)
+library(xts)
 
-#library(xts)
-#library(lubridate)
 
 Sys.setenv(TZ="CST6CDT")
+MAXGAP = 60 * 12  # in minutes
+TEMP_PERIOD = 30 # min
 
 ## constants
 hour1 <- as.difftime(1,units="hours")
@@ -21,7 +23,6 @@ wd.original <- getwd()
 
 # functions in other files
 source("time-change.R") #  time change functions
-
 
 
 vp.sat.groff <- function(C){
@@ -42,134 +43,70 @@ vpd <- function(rh,C){
 
 
 trunc_to_minutes <- function(x,nmin) {
-  nx <- as.POSIXlt(x)
-#  print(head(nx))
-  nx$min <- nmin * (nx$min %/% nmin)
-  nx$sec <- 0
-  return(nx)
+  minute(x) <- nmin * (minute(x) %/% nmin)
+  second(x) <- 0
+  return(x)
 }
 
 
-### Loop to read in each sensor file and stores as a zoo object
-# each line is checked for units to correct data in Farenheit.
-##old.read.sensor.data <- function(sfiles){
-##   sensors=basename(sfiles)
-##   sensors = substr(sensors,1, nchar(sensors)-4)  # the -4 strps ".csv"
-##   for (i in seq(along=sfiles)) {
-##     sensor = sensors[i]
-##     print(paste("reading sensor",sensor))
-##     t <- read.csv(sfiles[i],sep=",")
-##     # fix any temps in farenheit
-##     t$Value[t$Unit == "F"] <- (5.0/9.0)  * (t$Value[t$Unit == "F"] - 32)
-##     t$dt <- strptime(t$Date.Time,"%m/%d/%y %I:%M:%S %p",tz="CST")
-##     dst <- dst.2010(t$dt)  # get boolean vector of rows in DST
-##     t$dt[dst] <- t$dt[dst] - hour1  # subtract one hour from those rows
-##     tempz <- zoo(t$Value, t$dt)
-##     assign(sensor, tempz)
-##   }
-
-##   # merge sensors
-##   print("merging time series")
-##   tempzoo <- eval(as.name(sensors[1]))
-##   for (s in sensors[2:length(sensors)]) {
-##      tempzoo <- merge(tempzoo, eval(as.name(s)))
-##    }  
-##   colnames(tempzoo) <- sensors
-
-##   # interpolate NAs (this gives a time series by minute as 1 minute is
-##   # resolution of input data). Note: we have problem with H221 as it is
-##   ## missing data from Jan to Feb or so. 
-##   print("Interpolating missing values")
-##   alltemps <- na.approx(tempzoo, na.rm=FALSE, maxgap=360)  # don't interpolate more than 6 hours 
-##   return(alltemps) 
-## }
-
 strip.extension <- function(s){
   temp<-strsplit(s,".", fixed=TRUE)
-  #return(unlist(temp)[index(unlist(temp))%%2==1 ])
-  #print( temp)
   temp <-lapply(temp, function(x)x[1])
   return(unlist(temp))
   }
 
-## read.sensor.temp<-  function(filen){
-##     t <- read.csv(filen,sep=",")
-##     # fix any temps in farenheit
-##     t$Value[t$Unit == "F"] <- (5.0/9.0)  * (t$Value[t$Unit == "F"] - 32)
-##     t$dt <- trunc(as.POSIXct(strptime(t$Date.Time,"%m/%d/%y %I:%M:%S %p",tz="CST"), units="min"))
 
-##     ### Fix Time change DST issues  ignore for now
-##     ## dst <- filter.dst(t$dt)  # get boolean vector of rows in DST
-##     ## t$dt[dst] <- t$dt[dst] - hour1  # subtract one hour from those rows
-##     tempz <- zoo(t$Value, t$dt)
-##     dupes <-duplicated(index(tempz))
-##     if(any(dupes)){
-##       print(paste("Warning: duplicated time in sensor",filen))
-##       print(tempz[dupes])
-##       tempz <- tempz[!dupes]
-##     }
-##  #   g <- seq(start(tempz), end(tempz), by = times("00:05:00"))
-##  #   na.locf(tempz, xout = g)
-##     return(tempz)
-##   }
+findgaps <- function(x, msize = 12) {
+  gaps <- rle(is.na(x))
+  offsets <- c(1, cumsum(head(gaps$lengths, -1)) + 1)
+#  shortgaps <- which(gaps$values & (gaps$lengths <= msize)))
+  longgaps <- which(gaps$values & (gaps$lengths > msize))
+  return(longgaps)
+}
+
 
 read.sensor <-  function(filen){
-    t <- read.csv(filen,sep=",")
-    # fix any temps in farenheit
-    t$Value[t$Unit == "F"] <- (5.0/9.0)  * (t$Value[t$Unit == "F"] - 32)
-    t$dt <- trunc(as.POSIXct(strptime(t$Date.Time,"%m/%d/%y %I:%M:%S %p",tz="CST"), units="min"))
+  td <- read.csv(filen,sep=",")
+  # fix any temps in farenheit
+  td$Value[td$Unit == "F"] <- (5.0/9.0)  * (td$Value[td$Unit == "F"] - 32)
+  td$dt <- mdy_hms(td$Date.Time, tz=Sys.getenv("TZ"), truncated=1)
+  td$dt <- trunc_to_minutes(td$dt,1)
+  
+  tempz <- xts(td$Value, td$dt)
+  dupes <-duplicated(index(tempz))
+  if(any(dupes)){
+    #print(paste("Warning: duplicated time in sensor",filen))
+    #print(tempz[dupes])
+    tempz <-  tempz[!dupes]
+  }
+  print(paste("Dupes removed from ", filen))
 
-    ### Fix Time change DST issues  ignore for now
-    ## dst <- filter.dst(t$dt)  # get boolean vector of rows in DST
-    ## t$dt[dst] <- t$dt[dst] - hour1  # subtract one hour from those rows
-    tempz <- zoo(t$Value, t$dt)
-    dupes <-duplicated(index(tempz))
-    if(any(dupes)){
-       print(paste("Warning: duplicated time in sensor",filen))
-       print(tempz[dupes])
-       tempz <-  tempz[!dupes]
-    }
-    print(paste("Dupes removed from ", filen))
-   
-    # 15 minute spline fit 
-    m15 <- as.difftime(15,unit="mins")
-    g <- seq(trunc_to_minutes(start(tempz),15), end(tempz), by=m15)
-#    tempz <- na.spline(tempz, xout = g) # this did what I want but what is the vector name?
-    tempz <- na.approx(tempz, xout = g, maxgap=12) #
-    #plot(tempz)
-    return(tempz)
+  allmins <- seq(trunc_to_minutes(start(tempz),1), end(tempz), by=as.difftime(1,unit="mins"))
+  tempz <- merge(tempz, xts(, allmins)) 
+  tempz <- na.spline(tempz, maxgap=MAXGAP)
+  extract_times <-  trunc_to_minutes(index(tempz), TEMP_PERIOD)  
+  return(tempz[extract_times])
   }
 
 read.sensor.data <- function(sfiles){
   sensors=basename(sfiles)
-  #print(sensors)
   sensors = strip.extension(sensors)
-  #print(sensors)
   for (i in seq(along=sfiles)) {
-    sensor = sensors[i]
-    print(paste("reading sensor",sensor))
-    
-    tempz <- read.sensor(sfiles[i])
- 
-    assign(sensor, tempz)
+   sensor = sensors[i]
+   print(paste("reading sensor",sensor))
+   
+   tempz <- read.sensor(sfiles[i])
+   colnames(tempz) <- sensor
+   assign(sensor, tempz)
   }
 
   # merge sensors
   print("merging time series")
-  tempzoo <- eval(as.name(sensors[1]))
-  for (s in sensors[2:length(sensors)]) {
-     print(paste("merging sensor",as.name(s)))
-     tempzoo <- merge(tempzoo, eval(as.name(s)))
-   }  
-  colnames(tempzoo) <- sensors
-
-  # interpolate NAs (this gives a time series by minute as 1 minute is
-  # resolution of input data). Note: we have problem with H221 as it is
-  ## missing data from Jan to Feb or so. 
-  print("Interpolating missing values")
-  alltemps <- na.approx(tempzoo, na.rm=FALSE, maxgap=12)  # don't interpolate more than 6 hours
-  #alltemps <- spline(tempzoo, na.rm=FALSE, maxgap=12)  # don't interpolate more than 6 hours 
-  return(alltemps) 
+  objs <- mget(sensors)
+  stopifnot(length(objs) == length(sensors))
+  
+  big_series <- Reduce(function(...) merge(..., all=T), objs)
+  return(big_series) 
 }
 
 
@@ -203,15 +140,6 @@ zoo2df <- function(df, val="temp"){
   t
 }
 
-# 
-bmerge <- function(l) {
-  r <- merge( l[1], l[2])
-  for(i in l[2:length(l)]) {
-    r <- merge(r, i, all.x=TRUE)
-  }
-  r
-}
-
 # Calculate number of freezes in a temperature series
 numfreezes <- function(x) {
   return(sum(x <= 0,na.rm=FALSE))
@@ -231,7 +159,7 @@ daily.summaries <- function(alltemps, humidity=FALSE){
   dailymean.df <- zoo2df(maxtemps.daily,"mean")
   dtr.df <-  zoo2df(dtr,"dtr")
   
-return(bmerge(list(dailymin.df,dailymax.df,dailymean.df, dtr.df)))
+return( Reduce(function(...) merge(..., all=T), list(dailymin.df,dailymax.df,dailymean.df, dtr.df)))
 
 }
 
@@ -248,7 +176,7 @@ monthly.summaries <- function(dailytemps){
   meandtr$dtr[is.infinite(meandtr$dtr)] <- NA
   meandtr$dtr[is.nan(meandtr$dtr)] <- NA
   
-  return(bmerge(list(freezes,avemax,avemin,meantemp,meandtr)))
+  return(  Reduce(function(...) merge(..., all=T), list(freezes,avemax,avemin,meantemp,meandtr)))
 }
 
 ###
@@ -308,7 +236,7 @@ dec2jan <- function(m){
 
 #### statistcs by sensor
 # read list of sensors stats (elevation, waypoints, etc
-sensors.raw <- read.csv("../sensors.csv", header=TRUE, sep="\t")
+sensors.raw <- read.csv("../microclimate/sensors.csv")
 #sensors.raw$X <- NULL
 
 ## merge summaries with sensor location data
@@ -332,8 +260,7 @@ qplot(elev, avemin, data=tdata, color=mtn) + facet_grid( year ~ .,scales="free")
 
 
 
-
-qplot(date, max,data=subset(temp.daily.sum,mtn=="GM")) + facet_grid(sensor ~ .) + scale_y_continuous("Average daily maximum temperature (C)") + + bestfit
+qplot(datet, max, data=subset(temp.daily.sum, mtn=="CM")) + facet_grid(sensor ~ .) + scale_y_continuous("Average daily maximum temperature (C)") 
 
 
 
