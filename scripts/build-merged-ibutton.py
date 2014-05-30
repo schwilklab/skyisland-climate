@@ -17,7 +17,15 @@ BASE_DIR = "../microclimate"
 RENAME_TABLE = "../microclimate/sensor-rename-table.csv"
 TOMERGE = [("../microclimate/raw-ibutton/DM/T", "../microclimate/merged-ibutton/DM/T"), ("../microclimate/raw-ibutton/GM/T", "../microclimate/merged-ibutton/GM/T"), ("../microclimate/raw-ibutton/CM/T", "../microclimate/merged-ibutton/CM/T"),("../microclimate/raw-ibutton/DM/H", "../microclimate/merged-ibutton/DM/H"), ("../microclimate/raw-ibutton/GM/H", "../microclimate/merged-ibutton/GM/H"),("../microclimate/raw-ibutton/CM/H", "../microclimate/merged-ibutton/CM/H"),]
 
-       
+
+def ensure_dir(f):
+    if os.path.isfile(f):
+        d = os.path.dirname(f)
+    else : 
+        d = f
+    if not os.path.exists(d):
+        os.makedirs(d)
+	
 def getbname(s):
     return(os.path.splitext(s)[0])
 
@@ -90,6 +98,7 @@ def main():
     ### merge all in tomerge list
     for rawd, merged in TOMERGE:
         print("cleaning " + merged)
+        ensure_dir(merged)
         cleandir(merged)
         print("merging " + rawd + " to " + merged)
         build_merged_dir(build_sensor_file_map(rawd), merged)
@@ -98,6 +107,3 @@ def main():
 # Main program
 if __name__ == "__main__" :
     main()
-        
-
-    
