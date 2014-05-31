@@ -1,5 +1,5 @@
 #! /usr/bin/env Rscript
-## script to take snesor master list and output a csv file in correct format
+## script to take sensor master list and output a csv file in correct format
 ## for uploading to the garmin gps units
 
 sensor.master <- read.csv("../microclimate/sensors.csv")
