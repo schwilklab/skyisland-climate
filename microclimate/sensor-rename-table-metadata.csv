@@ -1,0 +1,3 @@
+variable,type,units,description
+oldname,string,,"Old sensor name, to be replaced"
+newname,string,,"Current sensor name, to be used"
