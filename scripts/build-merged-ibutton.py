@@ -1,22 +1,23 @@
-#! /usr/bin/python
-# build-merged-ibutton.py script to merge all ibutton data to a single csv file
-# for each sensor. Each download event should be stored to another folder under
-# the raw-ibutton/T or /H folders. It does not matter if the csv files use F or
-# C, that is dealt with in the R script.
+#!/usr/bin/env python 
 
-# this script does not need to 
+# build-merged-ibutton.py script to merge all ibutton data to
+# a single csv file for each sensor. Each download event should be stored to
+# another folder under the raw-ibutton/T or /H folders. It does not matter if
+# the csv files use Farenheit or Celsius, that is dealt with in the R scripts.
 
 from collections import defaultdict
 import os
 import csv
+import datetime
 
-__version__ = """0.1"""
+__version__ = """0.2"""
 
 BASE_DIR = "../microclimate"
 
 RENAME_TABLE = "../microclimate/sensor-rename-table.csv"
 TOMERGE = [("../microclimate/raw-ibutton/DM/T", "../microclimate/merged-ibutton/DM/T"), ("../microclimate/raw-ibutton/GM/T", "../microclimate/merged-ibutton/GM/T"), ("../microclimate/raw-ibutton/CM/T", "../microclimate/merged-ibutton/CM/T"),("../microclimate/raw-ibutton/DM/H", "../microclimate/merged-ibutton/DM/H"), ("../microclimate/raw-ibutton/GM/H", "../microclimate/merged-ibutton/GM/H"),("../microclimate/raw-ibutton/CM/H", "../microclimate/merged-ibutton/CM/H"),]
 
+TIMESTAMP_FILE = "../microclimate/merged-ibutton/LAST_BUILD"
 
 def ensure_dir(f):
     if os.path.isfile(f):
@@ -103,7 +104,11 @@ def main():
         print("merging " + rawd + " to " + merged)
         build_merged_dir(build_sensor_file_map(rawd), merged)
 
-   
+    # add timestamp file
+	f = open(TIMESTAMP_FILE,"w")
+	f.write(str(datetime.datetime.now()))
+	f.close()
+
 # Main program
 if __name__ == "__main__" :
     main()
