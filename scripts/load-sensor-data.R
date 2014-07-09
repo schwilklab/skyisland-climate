@@ -31,7 +31,7 @@ get_data <- function(dfile, time, func, ...) {
         data.time <- ymd_hms(file.info(dfile)$mtime)
     }
 
-    if (build.time > data.time) {
+    if (time > data.time) {
         dots <- list(...) 
         res <- do.call(func, dots)
         saveRDS(res, file = dfile)
@@ -107,7 +107,7 @@ if(! file.exists(BUILD_TIMESTAMP)) stop("Merged iButton data not found. Run buil
 build_time <- scan(BUILD_TIMESTAMP, what="character", quiet=TRUE)
 build_time <- ymd_hms(paste(build_time, collapse=" "))
 
-alltemps <- get_data(TEMP_DATA, build.time, read_all_sensors) # retrieve the timeseries data
-temp.daily.sum <- get_data(DAILY_SUM, build.time, daily.summaries, alltemps)
-temp.monthly.sum <- get_data(MONTHLY_SUM, build.time, monthly.summaries, temp.daily.sum)
+alltemps <- get_data(TEMP_DATA, build_time, read_all_sensors) # retrieve the timeseries data
+temp.daily.sum <- get_data(DAILY_SUM, build_time, daily.summaries, alltemps)
+temp.monthly.sum <- get_data(MONTHLY_SUM, build_time, monthly.summaries, temp.daily.sum)
 # preceding objects are now loaded in global namespace
