@@ -64,9 +64,14 @@ BGN.5 <- read.csv(file.path(RAW_DATA, "soil-BGN-140405.csv"),
 names(BGN.5) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
 BGN.5$time <- mdy_hm(BGN.5$time, tz = "CST")
 
-BGN <- rbind(BGN.1,BGN.2, BGN.3, BGN.4, BGN.5)
+BGN.6 <- read.csv(file.path(RAW_DATA, "soil-BGN-140719.csv"),
+                  stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
+names(BGN.6) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
+BGN.6$time <- mdy_hm(BGN.6$time, tz = "CST")
+
+BGN <- rbind(BGN.1,BGN.2, BGN.3, BGN.4, BGN.5, BGN.6)
 write.csv(BGN, file.path(OUTPUT, "soil-BGN-all.csv"), row.names=FALSE)
-rm(BGN.1,BGN.2, BGN.3, BGN.4, BGN.5)
+rm(BGN.1,BGN.2, BGN.3, BGN.4, BGN.5, BGN.6)
 
 
 ## BGS
@@ -97,10 +102,15 @@ BGS.5 <- read.csv(file.path(RAW_DATA, "soil-BGS-140405.csv"),
 names(BGS.5) <- c("time", "p1_VWC", "p2_psi", "p2_temp", "p3_psi", "p4_VWC")
 BGS.5$time <- mdy_hm(BGS.5$time, tz = "CST")
 
+BGS.6 <- read.csv(file.path(RAW_DATA, "soil-BGS-140719.csv"),
+                  stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:6)]
+names(BGS.6) <- c("time", "p1_VWC", "p2_psi", "p2_temp", "p3_psi", "p4_VWC")
+BGS.6$time <- mdy_hm(BGS.6$time, tz = "CST")
 
-BGS <- rbind.fill(BGS.1,BGS.2, BGS.3, BGS.4, BGS.5)
+
+BGS <- rbind.fill(BGS.1,BGS.2, BGS.3, BGS.4, BGS.5, BGS.6)
 write.csv(BGS, file.path(OUTPUT, "soil-BGS-all.csv"), row.names=FALSE)
-rm(BGS.1,BGS.2, BGS.3, BGS.4, BGS.5)
+rm(BGS.1,BGS.2, BGS.3, BGS.4, BGS.5, BGS.6)
 
 
 
@@ -170,10 +180,15 @@ MDS.6 <- read.csv(file.path(RAW_DATA, "soil-MDS-140406.csv"),
 names(MDS.6) <- c("time", "p1_psi", "p2_VWC", "p3_psi", "p4_VWC")
 MDS.6$time <- mdy_hm(MDS.6$time, tz = "CST")
 
+MDS.7 <- read.csv(file.path(RAW_DATA, "soil-MDS-140720.csv"),
+                  stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
+names(MDS.7) <- c("time", "p1_psi", "p2_VWC", "p3_psi", "p4_VWC")
+MDS.7$time <- mdy_hm(MDS.7$time, tz = "CST")
+
 ##
-MDS <- rbind.fill(MDS.1, MDS.2, MDS.3, MDS.4, MDS.5, MDS.6)
+MDS <- rbind.fill(MDS.1, MDS.2, MDS.3, MDS.4, MDS.5, MDS.6, MDS.7)
 write.csv(MDS, file.path(OUTPUT, "soil-MDS-all.csv"), row.names=FALSE)
-rm(MDS.1, MDS.2, MDS.3, MDS.4, MDS.5, MDS.6)
+rm(MDS.1, MDS.2, MDS.3, MDS.4, MDS.5, MDS.6, MDS.7)
 
 
 ## LCN  Note that ports 3 and 4 have bad data (mps2 without software upgrade until May 2013).
@@ -221,6 +236,22 @@ ggplot(BGN, aes(time, psi, color = probe)) + geom_line()
 #### Rain gauges.
 library(lubridate)
 
+
+# fix dates
+
+fix_time_series <- function(x, lower, upper) {
+    for(i in 2:length(x)){
+        if (x[i] < lower | x[i] > upper) {
+            x[i] <- x[i-1] + dhours(1)
+          }
+    }
+    return(x)
+}
+
+    
+
+
+## data
 BGS.rain <-  read.csv(file.path(RAW_DATA, "rain-BGS-121006.csv"), stringsAsFactors=FALSE)
 names(BGS.rain) <- c("time","precip.mm")
 BGS.rain$time <- ymd_hms(BGS.rain$time)
@@ -237,19 +268,60 @@ BGS.rain4 <-  read.csv(file.path(RAW_DATA, "rain-BGS-140405.csv"), stringsAsFact
 names(BGS.rain4) <- c("time","precip.mm")
 BGS.rain4$time <- mdy_hm(BGS.rain4$time)
 
-BGS.rain <- rbind(BGS.rain, BGS.rain2, BGS.rain3, BGS.rain4)
+BGS.rain5 <-  read.csv(file.path(RAW_DATA, "rain-BGS-140719.csv"), stringsAsFactors=FALSE)[,c(1:2)]
+names(BGS.rain5) <- c("time","precip.mm")
+BGS.rain5$time <- mdy_hm(BGS.rain5$time)
+
+BGS.rain <- rbind(BGS.rain, BGS.rain2, BGS.rain3, BGS.rain4, BGS.rain5)
 
 write.csv(BGS.rain, file.path(OUTPUT, "rain-BGS-all.csv"), row.names=FALSE)
 
-## TODO: make summaries
 
-## MD.rain  ##TODO
+## MD.rain
 
+MD.rain1 <- read.csv(file.path(RAW_DATA, "rain-MD-120825.csv"), stringsAsFactors=FALSE )
+names(MD.rain1) <- c("time","precip.mm")
+MD.rain1$time <- dmy_hm(MD.rain1$time, tz="CST")
+# bad times in data!
+#MD.rain1$time <- fix_time_series(MD.rain1$time, ymd("2011-01-01"), ymd("2015-01-01"))
 
-## MD.rain <- read.csv("rain-MD-120924.csv")
-## names(MD.rain) <- c("time","precip.mm")
-## time1 <- dmy_hm(MD.rain$time, tz="CST")
-## time1[is.na(time1)] <- mdy_hm(MD.rain$time[is.na(time1)], tz="CST")
-## MD.rain$time <- time1
+MD.rain2 <- read.csv(file.path(RAW_DATA, "rain-MD-130523.csv"), stringsAsFactors=FALSE )
+names(MD.rain2) <- c("time","precip.mm")
+MD.rain2$time <- mdy_hm(MD.rain2$time, tz="CST")
+# bad times in data!
+MD.rain2$time <- fix_time_series(MD.rain2$time, ymd("2011-01-01"), ymd("2015-01-01"))
 
+MD.rain3 <- read.csv(file.path(RAW_DATA, "rain-MD-130624.csv"), stringsAsFactors=FALSE )
+names(MD.rain3) <- c("time","precip.mm")
+MD.rain3$time <- mdy_hm(MD.rain3$time, tz="CST")
+
+MD.rain4 <- read.csv(file.path(RAW_DATA, "rain-MD-130812.csv"), stringsAsFactors=FALSE )
+names(MD.rain4) <- c("time","precip.mm")
+MD.rain4$time <- dmy_hm(MD.rain4$time, tz="CST")
+
+MD.rain5 <- read.csv(file.path(RAW_DATA, "rain-MD-140406.csv"), stringsAsFactors=FALSE )
+names(MD.rain5) <- c("time","precip.mm")
+MD.rain5$time <- mdy_hm(MD.rain5$time, tz="CST")
+# bad times in data!
+MD.rain5$time <- fix_time_series(MD.rain5$time, ymd("2011-01-01"), ymd("2015-01-01"))
+
+MD.rain6 <- read.csv(file.path(RAW_DATA, "rain-MD-140720.csv"), stringsAsFactors=FALSE )
+names(MD.rain6) <- c("time","precip.mm")
+MD.rain6$time <- mdy_hm(MD.rain6$time, tz="CST")
+
+MD.rain <- rbind(MD.rain1, MD.rain2, MD.rain3, MD.rain4, MD.rain5, MD.rain6)
+write.csv(MD.rain, file.path(OUTPUT, "rain-MD-all.csv"), row.names=FALSE)
 ## write.csv(MD.rain, "rain-MD-120924.csv", row.names=FALSE)
+
+
+
+## daily summary:
+
+BGS.rain$date <- floor_date(BGS.rain$time, "day")
+BGS.rain.daily <- ddply(BGS.rain, .(date), summarize, precip.mm = sum(precip.mm))
+
+MD.rain$date <- floor_date(MD.rain$time, "day")
+MD.rain.daily <- ddply(MD.rain, .(date), summarize, precip.mm = sum(precip.mm))
+
+
+ggplot(MD.rain.daily, aes(date, precip.mm)) + geom_point()
