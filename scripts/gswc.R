@@ -44,3 +44,14 @@ ggplot(sensor.soil, aes(gswc , elev)) +
 ggplot(subset(sensor.soil, season=="Spring"), aes(gswc , elev)) +
     geom_point() +
     facet_grid( year ~ .)
+
+
+
+## DWS check 2014 data
+s2014<- s2014 <- unique(subset(sensor.soil, year==2014)$sensor)
+## missing:
+tempsensors <- sensors$sensor[sensors$type == "T"]
+tempsensors[ ! tempsensors %in% s2014]
+
+## existing data with missing dry weights
+subset(sensor.soil, year == 2014 & is.na(wb.soil.dry))$sensor
