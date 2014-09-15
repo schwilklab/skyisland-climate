@@ -4,7 +4,7 @@ library(lubridate)
 library(ggplot2)
 
 sensor.soil <- read.csv("../microclimate/soil/sensor-soil.csv")
-sensors <- read.csv("../microclimate/sensor.csv")
+sensors <- read.csv("../microclimate/sensors.csv")
 sensor.soil <- merge(sensor.soil,sensors, all.x=TRUE)
 sensor.soil$date <- mdy(sensor.soil$date)
 
