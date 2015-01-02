@@ -1,4 +1,4 @@
-# climate-stats.R
+# climate-figs.R
 
 # depends upon iButton.R (for sensor reading functions) and load-sensor-data.R
 # (to load summaries into workspace intelligently)
@@ -23,6 +23,9 @@ dec2jan <- function(m){
 ###############################################################################
 ## Main script starts here
 ###############################################################################
+
+# output location for plots:
+plot_output <- "../results/plots/"
 
 # loads alltemps, temp.daily.sum andtemp.monthly.sum
 source("./load-sensor-data.R")
@@ -61,20 +64,20 @@ qplot(datet, max, data=subset(temp.daily.sum, mtn=="CM")) + facet_grid(sensor ~ 
 
 
 qplot(elev, nfreezes, data=subset(temp.monthly.sum, mtn=="GM"))  + facet_grid( yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Number of freezing events",limits=c(0,32)) + geom_smooth() #+ bestfit 
-ggsave("nfreezes.pdf")
+ggsave(file.path(plot_output, "nfreezes.pdf"))
 
 qplot(elev, avemax,data=temp.monthly.sum,color=mtn) + facet_grid( yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily maximum temperature (C)") + bestfit
-ggsave("dmax-by-month.pdf")                                        
+ggsave(file.path(plot_output, "dmax-by-month.pdf"))
 
 #qplot(elev, avemin,data=subset(tdata,mtn=="DM")) +  facet_grid(yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily minimum temperature (C)") + bestfit
 
 qplot(elev, avemin,data=subset(tdata,is.winter(tdata), color=mtn)) +  facet_grid(yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily minimum temperature (C)") + bestfit
-ggsave("dmin-by-month.pdf")
+ggsave(file.path(plot_output, "dmin-by-month.pdf"))
 #+ geom_text(aes(label=sensor,size=3,angle=60, position="jitter") )
 
 
 qplot(elev, dtr,data=subset(tdata,mtn=="GM")) +  facet_grid( yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily temperature range (C)") + bestfit
-ggsave("dtr.pdf")
+ggsave(file.path(plot_output,"dtr.pdf"))
 
 # this really just shows when sensors appread or were stopped:
 qplot(date,min, data=temp.daily.sum) + facet_grid(sensor ~ .)
@@ -82,7 +85,7 @@ qplot(date,min, data=temp.daily.sum) + facet_grid(sensor ~ .)
 
 
 qplot(elev, nfreezes, data=tdata) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Number of freezing events",limits=c(0,32)) + geom_smooth() #+ bestfit 
-ggsave("nfreezes-winter.pdf")
+ggsave(file.path(plot_output,"nfreezes-winter.pdf"))
 
 
 
@@ -124,10 +127,10 @@ temps.df.DM$month <- format(temps.df.DM$datet, "%m")
 temps.df.DM$year <- format(temps.df.DM$datet, "%y")
 temps.df.DM$hour <- as.numeric(format(temps.df.DM$datet, "%H"))
 
- d <- subset(temps.df.DM, month == "02" | month == "01" | month=="03")
+d <- subset(temps.df.DM, month == "02" | month == "01" | month=="03")
 
 thawrates.DM <- ddply(d, .(sensor,day), summarize, thawmin = thawmins(temp,datet) )
 
-## low eelvation sensor
+## low elevation sensor
  dd <- subset(thawrates.DM,sensor=="MI007") # & thawmin > 15)
 quantile(dd$thawmin, c(0.0001, 0.05,0.1,0.2,0.25), na.rm=TRUE)
