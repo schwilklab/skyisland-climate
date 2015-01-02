@@ -5,6 +5,20 @@ library(ggplot2)
 
 sensor.soil <- read.csv("../microclimate/soil/sensor-soil.csv")
 sensors <- read.csv("../microclimate/sensors.csv")
+tempsensors <- sensors$sensor[sensors$type == "T"]
+for (s in unique(sensor.soil$sensor)) {
+    if(! s %in% tempsensors) {
+        sensor.soil$sensor[sensor.soil$sensor == s] <- sensors$pair[sensors$sensor==s]
+    }
+}
+
+## for (s in unique(sensor.soil$sensor)) {
+##     if(! s %in% tempsensors) {
+##         print(s)
+##     }
+## }
+
+
 sensor.soil <- merge(sensor.soil,sensors, all.x=TRUE)
 sensor.soil$date <- mdy(sensor.soil$date)
 
