@@ -91,3 +91,9 @@ sensors <- merge(sensors.raw[,c(1,2,3,4,5,6,7)], sensors.topo, by=c("sensor"))
 DM.tmin.loadings <- merge(sensors, DM.tmin.loadings, by = c("sensor"))
 
 qplot(elev, PC2, data=DM.tmin.loadings)
+
+
+## Read in historical data for time series analyses
+source("./wx-data.R")
+wx_data <- read_historical_wx()
+
