@@ -51,45 +51,56 @@ bestfit <- geom_smooth(method="lm", color = "black")
 ##tdata = subset(temp.monthly.sum, yearmon != "2010-10")  # remove incomplete months for now
 
 ## freezing events Jan - March by elevation
-tdata <- subset(temp.monthly.sum, jan2feb(temp.monthly.sum$month))
-tdata <- ddply(tdata, .(year,mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(avemin))
+jan_march <- subset(temp.monthly.sum, jan2march(temp.monthly.sum$month))
+jan_march <- ddply(jan_march, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(avemin))
 
-qplot(elev, meanfreezes, data=tdata, color=mtn) + facet_grid( year ~ .,scales="free") +  scale_x_continuous("Elevation (m)") + scale_y_continuous("Mean Number of freezing events Jan-March") + geom_smooth()
+jan_feb <- subset(temp.monthly.sum, jan2feb(temp.monthly.sum$month))
+jan_feb <- ddply(jan_feb, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(avemin))
+
+qplot(elev, meanfreezes, data=jan_march, color=mtn) + facet_grid( year ~ .,scales="free") +  scale_x_continuous("Elevation (m)") + scale_y_continuous("Mean Number of freezing events Jan-March") + geom_smooth()
+
+## sum freezes jan2march for DM
+ggplot(subset(winspring, mtn=="DM"), aes(elev, meanfreezes, color=year)) +
+    geom_point() +
+    scale_x_continuous("Elevation (m)") +
+    scale_y_continuous("Number of freezing nights Jan-March") +
+    geom_smooth(method="lm", se=FALSE, size=1)
+ggsave(file.path(plot_output, "DM-nfreezes-jan-march.pdf"))
 
 
-qplot(elev, avemin, data=tdata, color=mtn) + facet_grid( year ~ .,scales="free") +  scale_x_continuous("Elevation (m)") + scale_y_continuous("Mean min Jan-March") + geom_smooth()
+## Daily min jan2feb for DM
+ggplot(subset(jan_feb, mtn=="DM"), aes(elev, avemin, color=year)) +
+    geom_point() +
+    scale_x_continuous("Elevation (m)") +
+    scale_y_continuous("Average minimum temperature Jan-Feb") +
+    geom_smooth(method="lm", se=FALSE, size=1)
+ggsave(file.path(plot_output, "DM-avemin-jan-feb.pdf"))
 
 
-qplot(datet, max, data=subset(temp.daily.sum, mtn=="CM")) + facet_grid(sensor ~ .) + scale_y_continuous("Average daily maximum temperature (C)") 
+qplot(elev, avemin, data=tdata, color=mtn) +
+    facet_grid( year ~ .,scales="free") +
+    scale_x_continuous("Elevation (m)") +
+    scale_y_continuous("Mean min Jan-March") +
+    geom_smooth()
 
-
-qplot(elev, nfreezes, data=subset(temp.monthly.sum, mtn=="GM"))  + facet_grid( yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Number of freezing events",limits=c(0,32)) + geom_smooth() #+ bestfit 
-ggsave(file.path(plot_output, "nfreezes.pdf"))
-
-qplot(elev, avemax,data=temp.monthly.sum,color=mtn) + facet_grid( yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily maximum temperature (C)") + bestfit
+qplot(elev, avemax,data=temp.monthly.sum,color=mtn) +
+    facet_grid( month ~ ., scales="free") +
+    scale_x_continuous("Elevation (m)") +
+    scale_y_continuous("Average daily maximum temperature (C)") +
+    bestfit
 ggsave(file.path(plot_output, "dmax-by-month.pdf"))
 
 #qplot(elev, avemin,data=subset(tdata,mtn=="DM")) +  facet_grid(yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily minimum temperature (C)") + bestfit
 
-qplot(elev, avemin,data=subset(tdata,is.winter(tdata), color=mtn)) +  facet_grid(yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily minimum temperature (C)") + bestfit
+qplot(elev, avemin,data=subset(temp.monthly.sum, dec2jan(month)), color=mtn) +
+    facet_grid(month ~ .) +
+    scale_x_continuous("Elevation (m)") +
+    scale_y_continuous("Average daily minimum temperature (C)") +
+    bestfit
 ggsave(file.path(plot_output, "dmin-by-month.pdf"))
-#+ geom_text(aes(label=sensor,size=3,angle=60, position="jitter") )
 
 
-qplot(elev, dtr,data=subset(tdata,mtn=="GM")) +  facet_grid( yearmon ~ .) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Average daily temperature range (C)") + bestfit
-ggsave(file.path(plot_output,"dtr.pdf"))
-
-# this really just shows when sensors appread or were stopped:
-qplot(date,min, data=temp.daily.sum) + facet_grid(sensor ~ .)
-
-
-
-qplot(elev, nfreezes, data=tdata) + scale_x_continuous("Elevation (m)") + scale_y_continuous("Number of freezing events",limits=c(0,32)) + geom_smooth() #+ bestfit 
-ggsave(file.path(plot_output,"nfreezes-winter.pdf"))
-
-
-
-##### functions to find thawy rates
+##### functions to find thaw rates
 
 thawtime <- function(x, dt) {
   fx <- x[1:(length(x)/2)]
@@ -131,6 +142,6 @@ d <- subset(temps.df.DM, month == "02" | month == "01" | month=="03")
 
 thawrates.DM <- ddply(d, .(sensor,day), summarize, thawmin = thawmins(temp,datet) )
 
-## low elevation sensor
+## test on low elevation sensor
  dd <- subset(thawrates.DM,sensor=="MI007") # & thawmin > 15)
 quantile(dd$thawmin, c(0.0001, 0.05,0.1,0.2,0.25), na.rm=TRUE)

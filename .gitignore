@@ -14,3 +14,5 @@ microclimate/merged-ibutton/
 #ignore spreasheets
 *.ods
 *.xls
+# ggmap temp files
+ggmapTemp.png
