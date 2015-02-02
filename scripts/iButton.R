@@ -66,7 +66,7 @@ read.sensor <-  function(filen){
 
     allmins <- seq(trunc_to_minutes(start(tempz),1), end(tempz), by=as.difftime(1,unit="mins"))
     tempz <- merge(tempz, xts(, allmins)) 
-    tempz <- na.spline(tempz, maxgap=MAXGAP)
+    tempz <- na.approx(tempz, maxgap=MAXGAP) # linear interpolation not ideal
     extract_times <-  trunc_to_minutes(index(tempz), TEMP_PERIOD)  
     return(tempz[extract_times])
 }
