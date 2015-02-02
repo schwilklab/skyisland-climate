@@ -34,16 +34,20 @@ The timestamp file under ./merged-ibutton/LAST_BUILD gives the date and time of 
 
 ## Sensor location data ##
 
-The coordinates, notes and other data (such as gravimetric soil water) associated with each sensor are stored in "sensors.csv".  See "sensors-metadata.csv" for details. Some sensors were renamed at some point after initial deployment.  This information is stored in "sensor-rename-table.csv", see the corresponding metadata file. The rename table is used by `build-merged-ibuttons.py` to write the merged data with the correct current name.
+The coordinates, notes and other data (such as gravimetric soil water) associated with each sensor are stored in "sensors.csv". See "sensors-metadata.csv" for details. Some sensors were renamed at some point after initial deployment. This information is stored in "sensor-rename-table.csv", see the corresponding metadata file. The rename table is used by `build-merged-ibuttons.py` to write the merged data with the correct current name.
 
+The bash script build-sensor-data.sh will run the python code to merge iButtons and then run the R code to produce the daily and monthly summaries (load-sensor-data.R). These scripts are smart about only re-reading and making new summaries if data has changed.
 
 # Uploading sensor locations to GPS #
 
-   The file "/field-sheets/sensors-to-upload.csv" is a paired down version of this master file with only lat, on, elev, and sensor name. This file is in a format suitable for uploading to a gps using gpsbabel and the unicsv format and is created by the `/scripts/make-sensors-to-upload.R` script.  To upload the waypoints to a garmin GPS attached via usb use gpsbabel.  The gps-load-sensors.sh script will create this file and load the sensors in one step:
+The file "/field-sheets/sensors-to-upload.csv" is a paired down version of this master file with only lat, on, elev, and sensor name. This file is in a format suitable for uploading to a gps using gpsbabel and the unicsv format and is created by the `/scripts/make-sensors-to-upload.R` script.  To upload the waypoints to a garmin GPS attached via usb use gpsbabel.  The gps-load-sensors.sh script will create this file and load the sensors in one step:
 
   ```
   ./gps-load-sensors.sh
   ```
 
+# General Metadata and notes #
+
+The file [sensor-notes.md](./sensor-notes.md) contains notes from each on sensor replacement, etc.
 
 [iButton]: http://www.maximintegrated.com/en/products/ibutton/ibuttons/thermochron.cfm
