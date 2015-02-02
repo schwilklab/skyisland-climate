@@ -64,7 +64,7 @@ zoo2df <- function(df, val="temp"){
 }
 
 
-# use humidity=TRUE to calcualte for humidity sensors
+# use humidity=TRUE to calculate for humidity sensors
 daily.summaries <- function(alltemps, humidity=FALSE){  
     mintemps.daily <- aggregate(alltemps,as.Date(index(alltemps)), FUN=min)
     maxtemps.daily <- aggregate(alltemps,as.Date(index(alltemps)), FUN=max)
