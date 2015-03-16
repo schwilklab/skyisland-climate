@@ -1,7 +1,7 @@
 Microclimate data
 =================
 
-We have a network of temperature and relative humidity sensors deployed across three mountain ranges in west Texas.  Each of this sensors is an [iButton][iButton] data logging device mounted inside a radiation shield (two nested plastic funnels) and hang at ~2m height in a tree in order to measure air temperature and/or relative humidity.
+We have a network of temperature and relative humidity sensors deployed across three mountain ranges in west Texas. Each of this sensors is an [iButton][iButton] data logging device mounted inside a radiation shield (two nested plastic funnels 4" and 5") and hang at ~2m height in a tree in order to measure air temperature and/or relative humidity.
 
 # Data storage capacity of iButtons #
    
@@ -18,9 +18,9 @@ REMINDER: Times in the program are in seconds. So, 45 mins = 2700 secs.
 
 ## Raw iButton timeseries data ##
 
-Each time we conduct a sensor reset trip, we download all of the data on each sensor and save that data as a csv file.  These files go in raw-ibutton/ directory tree organized by mtn range, then T or H, then date in yymmdd format. The actual files are named by sensor name. See for example [BC519.csv](./raw-ibutton/CM/T/111029/BC519.csv).
+Each time we conduct a sensor reset trip, we download all of the data on each sensor and save that data as a csv file. These files go in raw-ibutton/ directory tree organized by mtn range, then T or H, then date in yymmdd format. The actual files are named by sensor name. See for example [BC519.csv](./raw-ibutton/CM/T/111029/BC519.csv).
 
-NOTE: the silly windows XP operating system saved times in local time, but used the wrong dates for the standard time/daylight time transitions.  This means that there are apparent gaps in the spring and duplicated times in the fall for 2010, 2011 and 2012 [check this? maybe only 2010 and 2011?]. The problem was fixed after 2012. Rather than spend a lot of code checking and correcting that, I've ignored it for now and simply have the code in iButtons.R delete the Fall duplicates. It leads to the loss of some data, but does not really effect the daily summaries which everything else is based on. 
+NOTE: the silly windows XP operating system saved times in local time, but used the wrong dates for the standard time/daylight time transitions. This means that there are apparent gaps in the spring and duplicated times in the fall for 2010, 2011 and 2012 [check this? maybe only 2010 and 2011?]. The problem was fixed after 2012. Rather than spend a lot of code checking and correcting that, I've ignored it for now and simply have the code in iButtons.R delete the Fall duplicates. It leads to the loss of some data, but does not really effect the daily summaries which everything else is based on. 
 
 ## Building merged ibutton data files ##
 
