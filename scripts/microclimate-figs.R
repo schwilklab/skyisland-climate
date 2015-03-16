@@ -151,16 +151,27 @@ thawmins <- function(x, dt) {
  }
   
 
-temps.df.DM <- zoo2df(alltemps.DM)
-temps.df.DM$day <- format(temps.df.DM$datet, "%F")
-temps.df.DM$month <- format(temps.df.DM$datet, "%m")
-temps.df.DM$year <- format(temps.df.DM$datet, "%y")
-temps.df.DM$hour <- as.numeric(format(temps.df.DM$datet, "%H"))
+## temps.df.DM <- zoo2df(alltemps.DM)
+## temps.df.DM$day <- format(temps.df.DM$datet, "%F")
+## temps.df.DM$month <- format(temps.df.DM$datet, "%m")
+## temps.df.DM$year <- format(temps.df.DM$datet, "%y")
+## temps.df.DM$hour <- as.numeric(format(temps.df.DM$datet, "%H"))
 
-d <- subset(temps.df.DM, month == "02" | month == "01" | month=="03")
+## d <- subset(temps.df.DM, month == "02" | month == "01" | month=="03")
 
-thawrates.DM <- ddply(d, .(sensor,day), summarize, thawmin = thawmins(temp,datet) )
+## thawrates.DM <- ddply(d, .(sensor,day), summarize, thawmin = thawmins(temp,datet) )
 
-## test on low elevation sensor
- dd <- subset(thawrates.DM,sensor=="MI007") # & thawmin > 15)
-quantile(dd$thawmin, c(0.0001, 0.05,0.1,0.2,0.25), na.rm=TRUE)
+## ## test on low elevation sensor
+##  dd <- subset(thawrates.DM,sensor=="MI007") # & thawmin > 15)
+## quantile(dd$thawmin, c(0.0001, 0.05,0.1,0.2,0.25), na.rm=TRUE)
+
+
+# test ind sensors
+
+ggplot(data = subset(temp.daily.sum, sensor == "GP612" & as.POSIXct(datet) > mdy("01-01-2014")), aes(datet, max)) + geom_line()
+
+
+diff <- merge(subset(temp.daily.sum, sensor == "GP612"), subset(temp.daily.sum, sensor == "GP610"), by = "datet")
+
+ggplot(data = subset(diff, as.POSIXct(datet) > mdy("10-01-2014")), aes(datet, min.x - min.y)) + geom_line()
+
