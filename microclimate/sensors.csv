@@ -79,6 +79,7 @@ DC619,T,GM,,,31.9697,-104.85392,2370,,,mid,pinyon
 DC620,T,GM,,,31.99553,-104.83193,1912,,384,valley/flat,Juniper below mine entrance
 GP609,T,GM,,,31.89657,-104.83136,1832,NE,40,ridge,
 GP610,T,GM,,,31.89539,-104.83406,1914,,46,mid,pinyon
+GP611,H,GM,,GP612,31.89539,-104.83406,1914,,46,mid,pinyon
 GP612,T,GM,,,31.89699,-104.83962,2160,,291,mid,pinyon just below trail crossing ridge
 MC604,T,GM,,,31.97661,-104.75133,1534,,82,mid/flat,
 MC605,T,GM,,,31.9811,-104.78307,1615,,100,valley,
