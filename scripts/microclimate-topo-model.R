@@ -25,7 +25,7 @@ dec2jan <- function(m){
 }
 
 
-lengthNotNA <- colwise(function(x) { sum( ! is.na(x))})
+lengthNotNA <- plyr::colwise(function(x) { sum( ! is.na(x))})
 
 
 ###############################################################################
