@@ -57,7 +57,7 @@ temp.DM <- subset(temp.daily.sum, mtn=="DM")[, 1:4]
 DM.melted <- melt(temp.DM, id.var = c("datet", "sensor"))
 # cast data back to original wide formats for tmin, tmax and tmean:
 DM.tmin <- dcast(subset(DM.melted, variable=="min"), datet ~ sensor)
-DM.tmax <- dcast(subset(temps.melted, variable=="max"), datet ~ sensor)
+DM.tmax <- dcast(subset(DM.melted, variable=="max"), datet ~ sensor)
 
 ## Now deal with missing values
 lengthNotNA(DM.tmin)
