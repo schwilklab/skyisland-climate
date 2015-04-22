@@ -7,9 +7,9 @@
 # - temp.monthly.sum (df of monthly temperature stats)
 
 # File locations for R data files (cached data)
-TEMP_DATA <- "./temp-data/alltemps.rds"
-DAILY_SUM <- "./temp-data/daily-sum.rds"
-MONTHLY_SUM <- "./temp-data/monthly-sum.rds"
+TEMP_DATA <- "../results/tempdata/alltemps.rds"
+DAILY_SUM <- "../results//tempdata/daily-sum.rds"
+MONTHLY_SUM <- "../results/tempdata/monthly-sum.rds"
 BUILD_TIMESTAMP <- "../microclimate/merged-ibutton/LAST_BUILD"
 
 library(plyr)
