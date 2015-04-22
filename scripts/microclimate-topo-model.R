@@ -27,14 +27,13 @@ dec2jan <- function(m){
 
 lengthNotNA <- plyr::colwise(function(x) { sum( ! is.na(x))})
 
-
 ###############################################################################
 ## Main script starts here
 ###############################################################################
 
 # output location for plots:
 plot_output <- "../results/plots/"
-
+csv_output <- "../results/tempdata/"
 
 ## Holden et al 2001 PCA approach to summarize time series first. Use PCA to
 ## reduce spatial variation into a few PCA axes.
@@ -84,13 +83,26 @@ DM.tmax.scores <- cbind(data.frame(datet=DM.tmax$datet), as.data.frame(scores(DM
 DM.tmin.loadings <- as.data.frame(loadings(DM.tmin.PCA))
 DM.tmin.loadings$sensor <- rownames(DM.tmin.loadings)
 
+DM.tmax.loadings <- as.data.frame(loadings(DM.tmax.PCA))
+DM.tmax.loadings$sensor <- rownames(DM.tmax.loadings)
+
 # merge loadings with topographical data:
 # read list of sensors stats (elevation, waypoints, etc
 sensors.topo <- read.csv("../microclimate/sensors_topo.csv")
 sensors <- merge(sensors.raw[,c(1,2,3,4,5,6,7)], sensors.topo, by=c("sensor"))
 DM.tmin.loadings <- merge(sensors, DM.tmin.loadings, by = c("sensor"))
+DM.tmax.loadings <- merge(sensors, DM.tmax.loadings, by = c("sensor"))
 
 qplot(elev, PC2, data=DM.tmin.loadings)
+
+
+## Create temp csv files for Helen
+write.csv(DM.tmin.scores, file.path(csv_output, "DM-tmin-scores.csv"), row.names=FALSE)
+write.csv(DM.tmin.loadings, file.path(csv_output, "DM-tmin-loadings.csv"), row.names=FALSE)
+
+write.csv(DM.tmax.scores, file.path(csv_output, "DM-tmax-scores.csv"), row.names=FALSE)
+write.csv(DM.tmax.loadings, file.path(csv_output, "DM-tmax-loadings.csv"), row.names=FALSE)
+          
 
 
 ## Read in historical data for time series analyses
