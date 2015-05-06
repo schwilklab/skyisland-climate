@@ -9,6 +9,7 @@ microclimate/merged-ibutton/
 .RData
 # ignore RStudio files
 .Rproj.user
+*.Rproj
 .directory
 # ignore pdfs and images by default
 *.pdf
