@@ -20,17 +20,9 @@ iButtonTZ = "CST6CDT"
 MAXGAP = 60 * 12  # in minutes
 TEMP_PERIOD = 30 # min
 
-
-## SENSOR_DIRS <- c("../microclimate/merged-ibutton/DM/T/",
-##                  "../microclimate/merged-ibutton/GM/T/",
-##                  "../microclimate/merged-ibutton/CM/T/"
-##                  )
-
-
 ## constants
 hour1 <- as.difftime(1,units="hours")
 m30 <- as.difftime(30,units="mins")
-wd.original <- getwd()
 
 ####################################################
 ### functions for reading and cleaning ibutton data
@@ -68,7 +60,7 @@ read.sensor <-  function(filen){
     allmins <- seq(trunc_to_minutes(start(tempz),1), end(tempz), by=as.difftime(1,unit="mins"))
     tempz <- merge(tempz, xts(, allmins)) 
     tempz <- na.approx(tempz, maxgap=MAXGAP) # linear interpolation not ideal
-    extract_times <-  trunc_to_minutes(index(tempz), TEMP_PERIOD)  
+    extract_times <- trunc_to_minutes(index(tempz), TEMP_PERIOD)
     return(tempz[extract_times])
 }
 
@@ -102,10 +94,7 @@ read.sensor.dir <- function(d){
 
 read_all_sensors <- function(){
     alltemps.DM <- read.sensor.dir("../microclimate/merged-ibutton/DM/T/")
-#    saveRDS(alltemps.DM, "./temp-data/alltemps-DM.rds")
     alltemps.GM <- read.sensor.dir("../microclimate/merged-ibutton/GM/T/")
-#    saveRDS(alltemps.GM, "./temp-data/alltemps-GM.rds")
     alltemps.CM <- read.sensor.dir("../microclimate/merged-ibutton/CM/T/")
-#    saveRDS(alltemps.CM, "./temp-data/alltemps-CM.rds")
     return(cbind(alltemps.CM, alltemps.DM, alltemps.GM))
 }
