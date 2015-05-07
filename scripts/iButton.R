@@ -15,7 +15,8 @@
 library(lubridate)
 library(xts)
 
-Sys.setenv(TZ="CST6CDT")
+iButtonTZ = "CST6CDT"
+
 MAXGAP = 60 * 12  # in minutes
 TEMP_PERIOD = 30 # min
 
@@ -52,7 +53,7 @@ read.sensor <-  function(filen){
     td <- read.csv(filen,sep=",")
     # fix any temps in farenheit
     td$Value[td$Unit == "F"] <- (5.0/9.0)  * (td$Value[td$Unit == "F"] - 32)
-    td$dt <- mdy_hms(td$Date.Time, tz=Sys.getenv("TZ"), truncated=1)
+    td$dt <- mdy_hms(td$Date.Time, tz=iButtonTZ, truncated=1)
     td$dt <- trunc_to_minutes(td$dt,1)
   
     tempz <- xts(td$Value, td$dt)
