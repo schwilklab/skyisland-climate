@@ -98,3 +98,4 @@ read_all_sensors <- function(){
     alltemps.CM <- read.sensor.dir("../microclimate/merged-ibutton/CM/T/")
     return(cbind(alltemps.CM, alltemps.DM, alltemps.GM))
 }
+
