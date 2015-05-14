@@ -15,7 +15,7 @@
 library(lubridate)
 library(xts)
 
-iButtonTZ = "CST6CDT"
+iButtonTZ = "UTC"
 
 MAXGAP = 60 * 12  # in minutes
 TEMP_PERIOD = 30 # min
