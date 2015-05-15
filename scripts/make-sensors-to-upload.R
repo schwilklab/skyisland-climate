@@ -9,7 +9,7 @@ clean.df <- data.frame(name=clean.df$sensor,
                        lat=clean.df$lat,
                        lon=clean.df$lon,
                        elev=clean.df$elev)
-write.csv(clean.df, "../field-sheets/sensors-to-upload.csv", row.names=FALSE)
+write.csv(clean.df, "../results/field-sheets/sensors-to-upload.csv", row.names=FALSE)
 # then upload with
 # gpsbabel -i unicsv -o garmin -f sensors-to-upload.csv -F usb:
 
