@@ -21,7 +21,7 @@ layers <- sapply(ascii_grids, readGrid)
 names(layers) <- sapply(layers, names) # get colnames for list item names
 
 # remove layer that has wrong extent. TODO FIX!
-layers <- layers[ names(layers) != "relelev_z"]
+#fixed--removelayers <- layers[ names(layers) != "relelev_z"]
 
 # stack layers
 topostack <- stack(layers)

@@ -35,7 +35,6 @@ cor(tmin3)
 ##boards out there debating this, and I really haven't used this in prior models because
 ## RF already gives accuracy statistics.
 
-# removed for now bc diff grid size relelev_z  +
 splitdf <- function(dataframe, seed=NULL) {
   if (!is.null(seed)) set.seed(seed)
   index <- 1:nrow(dataframe)
@@ -77,7 +76,50 @@ partialPlot(model, training, "ldist_tovalley")
 source("load_grids.R")
 
 # this makes the predicted loading surface
-predPC1 <- predict(topostack, rf1, type="response")
 predPC1 <- predict(topostack, model, type="response")
 plot(predPC1)
-writeRaster(predPC1, file=file.path(data_output, "predPC1.tif"), overwrite=TRUE)
+writeRaster(predPC1, file=file.path(data_output, "predPC1_tmin.tif"), overwrite=TRUE)
+
+
+#now for PC2
+## divide into training and test data: The importance of this is debatable
+## because RF uses both boosting and bagging. There are a lot of online discussion
+##boards out there debating this, and I really haven't used this in prior models because
+## RF already gives accuracy statistics.
+
+#apply the function
+splitspc2 <- splitdf(tmin3, seed=808)
+
+#it returns a list - two data frames called trainset and testset
+str(splitspc2)
+
+# there are 18 observations in each data frame
+lapply(splitspc2,nrow)
+
+#view the first few columns in each data frame
+lapply(splitspc2,head)
+
+
+# save the training and testing sets as data frames
+trainingpc2 <- splitspc2$trainset
+testingpc2 <- splitspc2$testset
+summary(trainingpc2)
+summary(testingpc2)
+
+#fit the randomforest model
+model2 <- randomForest(PC2~., data = trainingpc2, importance=TRUE,keep.forest=TRUE)
+print(model2)
+#what are the important variables (via permutation)
+varImpPlot(model2, type=1)
+partialPlot(model2, training, "elev")
+partialPlot(model2, training, "relelev_z")
+partialPlot(model2, training, "relelev_watershed_minmax")
+partialPlot(model2, training, "radiation")
+partialPlot(model2, training, "zdist_valley")
+# load ascii grids
+source("load_grids.R")
+
+# this makes the predicted loading surface
+predPC2 <- predict(topostack, model2, type="response")
+plot(predPC2)
+writeRaster(predPC2, file=file.path(data_output, "predPC2_tmin.tif"), overwrite=TRUE)
