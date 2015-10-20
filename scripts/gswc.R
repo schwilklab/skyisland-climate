@@ -1,5 +1,5 @@
-library(reshape2)
-library(plyr)
+# Soil moisture data and calculations
+
 library(lubridate)
 library(ggplot2)
 
@@ -12,16 +12,10 @@ for (s in unique(sensor.soil$sensor)) {
     }
 }
 
-## for (s in unique(sensor.soil$sensor)) {
-##     if(! s %in% tempsensors) {
-##         print(s)
-##     }
-## }
-
-
 sensor.soil <- merge(sensor.soil,sensors, all.x=TRUE)
 sensor.soil$date <- mdy(sensor.soil$date)
 
+# calcalute gravimetric soil water content
 GSWC <- function(df) {
     return ( ((df$wb.soil.wet - df$wb) - (df$wb.soil.dry-df$wb)) / (df$wb.soil.dry -df$wb))
 }
@@ -51,15 +45,14 @@ sensor.soil$season <- season(sensor.soil$date)
 sensor.soil$year <- year(sensor.soil$date)
 
 
-ggplot(sensor.soil, aes(gswc , elev)) +
+ggplot(sensor.soil, aes(elev, gswc, color=mtn)) +
     geom_point() +
     facet_grid(year ~ season)
 
-ggplot(subset(sensor.soil, season=="Spring"), aes(gswc , elev)) +
+ggplot(subset(sensor.soil, year==2014), aes(elev, gswc)) +
     geom_point() +
-    facet_grid( year ~ .)
-
-
+    facet_grid(. ~ mtn)
+# Note: some bad data, negative values!
 
 ## DWS check 2014 data
 s2014<- s2014 <- unique(subset(sensor.soil, year==2014)$sensor)
