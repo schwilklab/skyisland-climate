@@ -9,15 +9,15 @@ Sys.setenv(TZ="CST6CDT")
 # helper functions
 
 jan2feb <- function(m){
-  return(m=="01" | m =="02")
+  return(m==1 | m ==2)
 }
 
 jan2march <- function(m){
-  return(m=="01" | m =="02" | m == "03")
+  return(m==1 | m ==2 | m == 3)
 }
 
 dec2jan <- function(m){
-  return(m=="12" | m =="1")
+  return(m==12 | m ==1)
 }
 
 ###############################################################################
@@ -51,7 +51,7 @@ bestfit <- geom_smooth(method="lm", color = "black")
 ##tdata = subset(temp.monthly.sum, yearmon != "2010-10")  # remove incomplete months for now
 
 # Daily mMaximum temperatures by mtn
-qplot(elev, avemax,data=subset(temp.monthly.sum) , color=mtn) +
+qplot(elev, mtmax,data=subset(temp.monthly.sum) , color=mtn) +
     facet_grid(year ~ month, scales="free") +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Average daily maximum temperature (C)") +
@@ -63,17 +63,31 @@ ggsave(file.path(plot_output, "dmax-by-month.pdf"))
 
 
 ## freezing events Jan - March by elevation
-jan_march <- subset(temp.monthly.sum, jan2march(temp.monthly.sum$month))
-jan_march <- ddply(jan_march, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(avemin))
+jan_march <- temp.monthly.sum %>% filter(jan2march(month)) %>%
+    group_by(sensor, year, mtn, elev) %>%
+    summarise(sumfreezes = sum(nfreezes, na.rm=TRUE),
+              meanfreezes = mean(nfreezes, na.rm=TRUE),
+              mtmin = mean(mtmin))
 
-jan_feb <- subset(temp.monthly.sum, jan2feb(temp.monthly.sum$month))
-jan_feb <- ddply(jan_feb, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(avemin))
+jan_feb <- temp.monthly.sum %>% filter(jan2feb(month)) %>%
+    group_by(sensor, year, mtn, elev) %>%
+    summarise(sumfreezes = sum(nfreezes, na.rm=TRUE),
+              meanfreezes = mean(nfreezes, na.rm=TRUE),
+              mtmin = mean(mtmin))
+#jan_march <- ddply(jan_march, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(avemin))
 
-qplot(elev, meanfreezes, data=jan_march, color=mtn) + facet_grid( year ~ .,scales="free") +  scale_x_continuous("Elevation (m)") + scale_y_continuous("Mean Number of freezing events Jan-March") + geom_smooth()
+#jan_feb <- subset(temp.monthly.sum, jan2feb(temp.monthly.sum$month))
+#jan_feb <- ddply(jan_feb, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(mtmin))
+
+qplot(elev, meanfreezes, data=jan_march, color=mtn) +
+    facet_grid( year ~ .,scales="free") +
+    scale_x_continuous("Elevation (m)") +
+    scale_y_continuous("Mean Number of freezing events Jan-March") +
+    geom_smooth()
 
 
 ## sum freezes jan2march by mtn range
-ggplot(jan_march, aes(elev, meanfreezes, color=year)) +
+ggplot(jan_march, aes(elev, meanfreezes, color=factor(year))) +
     geom_point() +
     facet_grid( mtn ~ .) +
     scale_x_continuous("Elevation (m)") +
@@ -84,7 +98,7 @@ ggsave(file.path(plot_output, "nfreezes-jan-march.pdf"),  width=col2, units="cm"
 
 
 ## sum freezes jan2march for DM
-ggplot(subset(jan_march, mtn=="DM"), aes(elev, meanfreezes, color=year)) +
+ggplot(subset(jan_march, mtn=="DM"), aes(elev, meanfreezes, color=factor(year))) +
     geom_point() +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Number of freezing nights Jan-March") +
@@ -93,7 +107,7 @@ ggsave(file.path(plot_output, "DM-nfreezes-jan-march.pdf"))
 
 
 ## Daily min jan2feb for DM
-ggplot(subset(jan_feb, mtn=="DM"), aes(elev, avemin, color=year)) +
+ggplot(subset(jan_feb, mtn=="DM"), aes(elev, mtmin, color=factor(year))) +
     geom_point() +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Average minimum temperature Jan-Feb") +
@@ -101,7 +115,7 @@ ggplot(subset(jan_feb, mtn=="DM"), aes(elev, avemin, color=year)) +
 ggsave(file.path(plot_output, "DM-avemin-jan-feb.pdf"))
 
 
-qplot(elev, avemin, data=jan_march, color=mtn) +
+qplot(elev, mtmin, data=jan_march, color=mtn) +
     facet_grid( year ~ .,scales="free") +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Mean min Jan-March") +
@@ -109,7 +123,7 @@ qplot(elev, avemin, data=jan_march, color=mtn) +
 
 
 
-qplot(elev, avemin,data=subset(temp.monthly.sum, dec2jan(month)), color=mtn) +
+qplot(elev, mtmin,data=subset(temp.monthly.sum, dec2jan(month)), color=mtn) +
     facet_grid(month ~ .) +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Average daily minimum temperature (C)") +
