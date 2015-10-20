@@ -19,6 +19,15 @@ source("load_grids.R")
 source("./microclimate-topo-PCA.R")
 PCAs <- loadPCAData()
 
+## To make raster maps in ggplot quickly
+makeMap <- function(topolayer) {
+    map <- rasterToPoints(topolayer)
+    map <- data.frame(map)
+    names(map) <- c("x", "y", "var")
+    ggplot(map, aes(x,y, fill=var)) +
+        geom_raster()
+}
+
 ## divide into training and test data: The importance of this is debatable
 ## because RF uses both boosting and bagging. There are a lot of online
 ## discussion boards out there debating this, and I really haven't used this in
