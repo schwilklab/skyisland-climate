@@ -3,7 +3,7 @@
 # depends upon iButton.R (for sensor reading functions) and load-sensor-data.R
 # (to load summaries into workspace intelligently)
 
-library(ggplot2)
+source("ggplot-theme.R")
 Sys.setenv(TZ="CST6CDT")
 
 # helper functions
@@ -75,14 +75,12 @@ qplot(elev, meanfreezes, data=jan_march, color=mtn) + facet_grid( year ~ .,scale
 ## sum freezes jan2march by mtn range
 ggplot(jan_march, aes(elev, meanfreezes, color=year)) +
     geom_point() +
-    facet_grid( . ~ mtn) +
+    facet_grid( mtn ~ .) +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Number of freezing nights Jan-March") +
-    geom_smooth(se=FALSE, size=1)
-ggsave(file.path(plot_output, "nfreezes-jan-march.pdf"))
-
-
-
+    geom_smooth(se=FALSE, size=1) +
+    pubtheme
+ggsave(file.path(plot_output, "nfreezes-jan-march.pdf"),  width=col2, units="cm")
 
 
 ## sum freezes jan2march for DM
@@ -115,7 +113,7 @@ qplot(elev, avemin,data=subset(temp.monthly.sum, dec2jan(month)), color=mtn) +
     facet_grid(month ~ .) +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Average daily minimum temperature (C)") +
-    bestfit
+    geom_smooth()
 ggsave(file.path(plot_output, "dmin-by-month.pdf"))
 
 
