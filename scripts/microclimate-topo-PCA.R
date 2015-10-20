@@ -10,9 +10,8 @@
 
 library(ggplot2)
 library(reshape2)
-#library(missMDA) # for imputing missing values for PCA
-#library(factoMine) # for PCA
-library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
+# see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
+library(pcaMethods)
 
 # loads alltemps, temp.daily.sum and temp.monthly.sum
 source("./load-sensor-data.R")
@@ -76,7 +75,7 @@ plot_output <- "../results/plots/"
 data_output <- "../results/tempdata/"
 
 
-# function to load the PCA scores and loadings into the workspace. To sae
+# function to load the PCA scores and loadings into the workspace. To save
 # running time, this checks to see if the csv files already exist and if they
 # do, simply reads these rather than rerunning the PCAs. Unless force=TRUE, in
 # which case the PCAs are rerun.
@@ -85,24 +84,23 @@ loadPCAData <- function(force=FALSE) {
     CM.PCA.file <- file.path(data_output, "CM-PCA.RData")
     GM.PCA.file <- file.path(data_output, "GM-PCA.RData")
 
-    if (file.exists(DM.PCA.file)) {
-        # assume all files exist, then
+    if (all(file.exists(DM.PCA.file), file.exists(CM.PCA.file), file.exists(GM.PCA.file))) {
         DM.PCA <- readRDS(DM.PCA.file)
-        #GM.PCA <- readRDS(GM.PCA.file) # TODO
-        #CM.PCA <- readRDS(CM.PCA.file) # TODO
+        GM.PCA <- readRDS(GM.PCA.file)
+        CM.PCA <- readRDS(CM.PCA.file)
     } else {
-        # run the PCA and save output to R dta object
+        # run the PCA and save output to R data object
         # merge summaries with sensor location data
         temp.daily.sum <- merge(temp.daily.sum, sensors)
 
         ## Try walk through on Davis Mtns (DM) data only
         DM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="DM")[, 1:4])
-#        CM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="CM")[, 1:4]) # TODO
-#        GM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="GM")[, 1:4]) # TODO
+        CM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="CM")[, 1:4])
+        GM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="GM")[, 1:4])
 
         saveRDS(DM.PCA, DM.PCA.file)
-#        saveRDS(CM.PCA, CM.PCA.file) # TODO
-#        saveRDS(GM.PCA, GM.PCA.file) # TODO
+        saveRDS(CM.PCA, CM.PCA.file)
+        saveRDS(GM.PCA, GM.PCA.file)
     }
     return(list("DM" = DM.PCA)) # TODO should return list of all three mtn ranges
 }
@@ -115,12 +113,3 @@ loadPCAData <- function(force=FALSE) {
 ## qplot(MSD, PC2, data=DM.PCA$tmin$loadings)
 ## qplot(relelev_watershed_minmax, PC1, data=DM.PCA$tmin$loadings)
 ## qplot(relelev_watershed_minmax, PC2, data=DM.PCA$tmin$loadings)
-
-
-## ## Create temp csv files for Helen (TODO: remove)
-## write.csv(DM.PCA$tmin$scores, file.path(csv_output, "DM-tmin-scores.csv"), row.names=FALSE)
-## write.csv(DM.PCA$tmin$loadings, file.path(csv_output, "DM-tmin-loadings.csv"), row.names=FALSE)
-## write.csv(DM.PCA$tmax$scores, file.path(csv_output, "DM-tmax-scores.csv"), row.names=FALSE)
-## write.csv(DM.PCA$tmax$loadings, file.path(csv_output, "DM-tmax-loadings.csv"), row.names=FALSE)
-
-
