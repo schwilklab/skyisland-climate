@@ -34,6 +34,9 @@ splitdf <- function(dataframe) {
 }
 
 
+# Just a quick and dirty check of most important pairwise correlations Just
+# checks PC1 and PC2 against all other variables and prints out pearson
+# correlation coefficences greater than 0.5.
 checkCorrelations <- function(mtn, var) {
     loadings <- PCAs[[mtn]][[var]]$loadings
     ## find corelated variables
@@ -42,14 +45,14 @@ checkCorrelations <- function(mtn, var) {
     ## PC1:
     print(paste("for mtn=", mtn, "and var=", var))
     print("PC1 correlates: ")
-    print(var.cors %>% filter(abs(PC1) > 0.5) %>% select(vars))
+    print(var.cors %>% filter(abs(PC1) > 0.5) %>% select(vars, PC1))
     ## PC2:
     print("PC2 correlates:")
-    print(var.cors %>% filter(abs(PC2) > 0.5) %>% select(vars))
+    print(var.cors %>% filter(abs(PC2) > 0.5) %>% select(vars, PC2))
 }
 
 
-## fit the randomforest model
+# fit the randomforest model
 fitRandomForest <- function(df, dep.var) {
     ind.vars <- names(df)[8:20]
     ind.vars <- paste(ind.vars, collapse=" + ")
@@ -78,14 +81,14 @@ DM.tmin.mod <- fitRandomForest(DM.tmin, "PC1")
 DM.tmin.mod
 ## what are the important variables (via permutation)
 varImpPlot(DM.tmin.mod, type=1)
-partialPlot(DM.tmin.mod, training, "elev")
-partialPlot(DM.tmin.mod, training, "relelev_z")
-partialPlot(DM.tmin.mod, training, "relelev_watershed_minmax")
-partialPlot(DM.tmin.mod, training, "radiation")
-partialPlot(DM.tmin.mod, training, "ldist_tovalley")
+partialPlot(DM.tmin.mod, DM.tmin, "elev")
+partialPlot(DM.tmin.mod, DM.tmin, "relelev_z")
+partialPlot(DM.tmin.mod, DM.tmin, "relelev_watershed_minmax")
+partialPlot(DM.tmin.mod, DM.tmin, "radiation")
+partialPlot(DM.tmin.mod, DM.tmin, "ldist_tovalley")
 
 ## Make the predicted loading surface
-DM.tmin.predPC1 <- predict(topostack, DM.tmin.mod)
+DM.tmin.predPC1 <- raster::predict(topostack, DM.tmin.mod)
 makeMap(DM.tmin.predPC1)
 writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
             overwrite=TRUE)
@@ -98,15 +101,14 @@ DM.tmax.mod <- fitRandomForest(DM.tmax, "PC1")
 DM.tmax.mod
 ## what are the important variables (via permutation)
 varImpPlot(DM.tmax.mod, type=1)
-partialPlot(DM.tmax.mod, training, "elev")
-partialPlot(DM.tmax.mod, training, "relelev_z")
-partialPlot(DM.tmax.mod, training, "relelev_watershed_minmax")
-partialPlot(DM.tmax.mod, training, "radiation")
-partialPlot(DM.tmax.mod, training, "ldist_tovalley")
+partialPlot(DM.tmax.mod, DM.tmax, "elev")
+partialPlot(DM.tmax.mod, DM.tmax, "relelev_z")
+partialPlot(DM.tmax.mod, DM.tmax, "relelev_watershed_minmax")
+partialPlot(DM.tmax.mod, DM.tmax, "radiation")
+partialPlot(DM.tmax.mod, DM.tmax, "ldist_tovalley")
 
 ## Make the predicted loading surface
-DM.tmax.predPC1 <- predict(topostack, DM.tmax.mod)
+DM.tmax.predPC1 <- raster::predict(topostack, DM.tmax.mod)
 makeMap(DM.tmax.predPC1)
 writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmax.tif"),
             overwrite=TRUE)
-
