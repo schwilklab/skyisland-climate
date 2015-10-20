@@ -1,10 +1,16 @@
-# random-forest.R
-#
-# Code to fit random forest models
+## random-forest.R
+## Code to fit random forest models
+
+## Random number seed
+RSEED = 808
+set.seed(RSEED)
+
 library(randomForest)
-library(raster)
 library(sp)
-library(maptools) # for readASCIIGrid
+library(dplyr)
+
+# Get the topgraphic data
+source("load_grids.R")
 
 # get the PCA scores and loadings. Function called below returns list of PCA
 # objects, one for each mtn range. Use `force=TRUE` to rerun the PCAs,
@@ -12,114 +18,95 @@ library(maptools) # for readASCIIGrid
 # results/tempdata directory.
 source("./microclimate-topo-PCA.R")
 PCAs <- loadPCAData()
-tmin <- PCAs[["DM"]]$tmin$loadings # grab DM dta only for testing. TODO: fix
-names(tmin)
-tmin <- data.frame(tmin)
-tmin2 <- tmin[ -c(1:7,22:25) ]
-names(tmin2)
-
-#find corelated variables for PC1
-cor(tmin2)
-#elev, relelev_z, and relelev_watershed_minmax have high pearson correlations with PC1
-
-#find corelated variables for PC2
-
-tmin3 <- tmin[ -c(1:7,21,23:25) ]
-cor(tmin3)
-#same vars as PC1, but with opposit signs
-#same vars as PC1, but with opposite signs
-
 
 ## divide into training and test data: The importance of this is debatable
-## because RF uses both boosting and bagging. There are a lot of online discussion
-##boards out there debating this, and I really haven't used this in prior models because
-## RF already gives accuracy statistics.
-
-splitdf <- function(dataframe, seed=NULL) {
-  if (!is.null(seed)) set.seed(seed)
+## because RF uses both boosting and bagging. There are a lot of online
+## discussion boards out there debating this, and I really haven't used this in
+## prior models because RF already gives accuracy statistics.
+## DWS: I don't think we can afford to split up the sensors into training and
+## testing with so few.
+splitdf <- function(dataframe) {
   index <- 1:nrow(dataframe)
   trainindex <- sample(index, trunc(length(index)/2))
   trainset <- dataframe[trainindex, ]
   testset <- dataframe[-trainindex, ]
-  list(trainset=trainset,testset=testset)
+  return(list(trainset=trainset,testset=testset))
 }
-#apply the function
-splits <- splitdf(tmin2, seed=808)
-
-#it returns a list - two data frames called trainset and testset
-str(splits)
-
-# there are 18 observations in each data frame
-lapply(splits,nrow)
-
-#view the first few columns in each data frame
-lapply(splits,head)
-
-# save the training and testing sets as data frames
-training <- splits$trainset
-testing <- splits$testset
-summary(training)
-summary(testing)
-library(randomForest)
-
-#fit the randomforest model
-model <- randomForest(PC1~., data = training, importance=TRUE,keep.forest=TRUE)
-print(model)
-#what are the important variables (via permutation)
-varImpPlot(model, type=1)
-partialPlot(model, training, "elev")
-partialPlot(model, training, "relelev_z")
-partialPlot(model, training, "relelev_watershed_minmax")
-partialPlot(model, training, "radiation")
-partialPlot(model, training, "ldist_tovalley")
-# load ascii grids
-source("load_grids.R")
-
-# this makes the predicted loading surface
-predPC1 <- predict(topostack, model, type="response")
-plot(predPC1)
-writeRaster(predPC1, file=file.path(data_output, "predPC1_tmin.tif"), overwrite=TRUE)
 
 
-#now for PC2
-## divide into training and test data: The importance of this is debatable
-## because RF uses both boosting and bagging. There are a lot of online discussion
-##boards out there debating this, and I really haven't used this in prior models because
-## RF already gives accuracy statistics.
-
-#apply the function
-splitspc2 <- splitdf(tmin3, seed=808)
-
-#it returns a list - two data frames called trainset and testset
-str(splitspc2)
-
-# there are 18 observations in each data frame
-lapply(splitspc2,nrow)
-
-#view the first few columns in each data frame
-lapply(splitspc2,head)
+checkCorrelations <- function(mtn, var) {
+    loadings <- PCAs[[mtn]][[var]]$loadings
+    ## find corelated variables
+    var.cors <- data.frame(cor(loadings[8:25]))
+    var.cors$vars <- row.names(var.cors)
+    ## PC1:
+    print(paste("for mtn=", mtn, "and var=", var))
+    print("PC1 correlates: ")
+    print(var.cors %>% filter(abs(PC1) > 0.5) %>% select(vars))
+    ## PC2:
+    print("PC2 correlates:")
+    print(var.cors %>% filter(abs(PC2) > 0.5) %>% select(vars))
+}
 
 
-# save the training and testing sets as data frames
-trainingpc2 <- splitspc2$trainset
-testingpc2 <- splitspc2$testset
-summary(trainingpc2)
-summary(testingpc2)
+## fit the randomforest model
+fitRandomForest <- function(df, dep.var) {
+    ind.vars <- names(df)[8:20]
+    ind.vars <- paste(ind.vars, collapse=" + ")
+    formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
+    model <- randomForest(formula, data = DM.tmin,
+                          importance=TRUE, keep.forest=TRUE)
+    return(model)
+}
 
-#fit the randomforest model
-model2 <- randomForest(PC2~., data = trainingpc2, importance=TRUE,keep.forest=TRUE)
-print(model2)
-#what are the important variables (via permutation)
-varImpPlot(model2, type=1)
-partialPlot(model2, training, "elev")
-partialPlot(model2, training, "relelev_z")
-partialPlot(model2, training, "relelev_watershed_minmax")
-partialPlot(model2, training, "radiation")
-partialPlot(model2, training, "zdist_valley")
-# load ascii grids
-source("load_grids.R")
 
-# this makes the predicted loading surface
-predPC2 <- predict(topostack, model2, type="response")
-plot(predPC2)
-writeRaster(predPC2, file=file.path(data_output, "predPC2_tmin.tif"), overwrite=TRUE)
+checkCorrelations("DM", "tmin")
+checkCorrelations("DM", "tmax")
+## CHECK: elev, relelev_z, and relelev_watershed_minmax have high pearson
+## correlations with PC2
+
+
+###############################################################################
+## DM TMIN
+###############################################################################
+
+## If we want tosplit into training and testing data:
+## DM.tmin <- splitdf(PCAs[["DM"]][["tmin"]]$loadings)
+
+DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
+DM.tmin.mod <- fitRandomForest(DM.tmin, "PC1")
+DM.tmin.mod
+## what are the important variables (via permutation)
+varImpPlot(DM.tmin.mod, type=1)
+partialPlot(DM.tmin.mod, training, "elev")
+partialPlot(DM.tmin.mod, training, "relelev_z")
+partialPlot(DM.tmin.mod, training, "relelev_watershed_minmax")
+partialPlot(DM.tmin.mod, training, "radiation")
+partialPlot(DM.tmin.mod, training, "ldist_tovalley")
+
+## Make the predicted loading surface
+DM.tmin.predPC1 <- predict(topostack, DM.tmin.mod)
+makeMap(DM.tmin.predPC1)
+writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
+            overwrite=TRUE)
+
+###############################################################################
+## DM TMAX
+###############################################################################
+DM.tmax <- PCAs[["DM"]][["tmax"]]$loadings
+DM.tmax.mod <- fitRandomForest(DM.tmax, "PC1")
+DM.tmax.mod
+## what are the important variables (via permutation)
+varImpPlot(DM.tmax.mod, type=1)
+partialPlot(DM.tmax.mod, training, "elev")
+partialPlot(DM.tmax.mod, training, "relelev_z")
+partialPlot(DM.tmax.mod, training, "relelev_watershed_minmax")
+partialPlot(DM.tmax.mod, training, "radiation")
+partialPlot(DM.tmax.mod, training, "ldist_tovalley")
+
+## Make the predicted loading surface
+DM.tmax.predPC1 <- predict(topostack, DM.tmax.mod)
+makeMap(DM.tmax.predPC1)
+writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmax.tif"),
+            overwrite=TRUE)
+
