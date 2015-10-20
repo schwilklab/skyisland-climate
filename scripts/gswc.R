@@ -3,6 +3,8 @@
 library(lubridate)
 library(ggplot2)
 
+source("ggplot-theme.R")
+
 sensor.soil <- read.csv("../microclimate/soil/sensor-soil.csv")
 sensors <- read.csv("../microclimate/sensors.csv")
 tempsensors <- sensors$sensor[sensors$type == "T"]
@@ -49,9 +51,13 @@ ggplot(sensor.soil, aes(elev, gswc, color=mtn)) +
     geom_point() +
     facet_grid(year ~ season)
 
-ggplot(subset(sensor.soil, year==2014), aes(elev, gswc)) +
+ggplot(subset(sensor.soil, year==2014), aes(elev, 100*gswc)) +
     geom_point() +
-    facet_grid(. ~ mtn)
+    scale_x_continuous("Elevation") +
+    scale_y_continuous("Gravimetric soil water content (%)", limits = c(0, 40) ) +
+    facet_grid(. ~ mtn) +
+    pubtheme
+ggsave("../results/plots/gswc-2014.pdf", width=col2, height=col2*0.7, unit="cm")
 # Note: some bad data, negative values!
 
 ## DWS check 2014 data
