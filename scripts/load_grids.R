@@ -1,20 +1,20 @@
-# Load topographic data grids
+## topographic data grids
 
-# data exported (loaded into gloabl namespace) as "topostack", a RasterStack
-# obect (package:raster).
+## data exported (loaded into global namespace) as "topostack", a RasterStack
+## object (from package 'raster'). requires packages raster, maptools
 
 GIS_DATA_DIR <- "../topo_grids"
 
-# get list of grid files
+## get list of grid files
 ascii_grids <- list.files(path=GIS_DATA_DIR, pattern = "*.asc", full.names=TRUE)
-# Use filenames without extensions as column names
+## Use filenames without extensions as column names
 
-#grid_names <- sub("[.][^.]*$", "", basename(ascii_grids))
+## grid_names <- sub("[.][^.]*$", "", basename(ascii_grids))
 
 readGrid <- function(filename) {
     colname <- sub("[.][^.]*$", "", basename(filename))
-    grid <- readAsciiGrid(filename, colname=colname)
-    return(raster(grid))
+    grid <- maptools::readAsciiGrid(filename, colname=colname)
+    return(raster::raster(grid))
 }
 
 layers <- sapply(ascii_grids, readGrid)
@@ -24,8 +24,7 @@ names(layers) <- sapply(layers, names) # get colnames for list item names
 #fixed--removelayers <- layers[ names(layers) != "relelev_z"]
 
 # stack layers
-topostack <- stack(layers)
-
+topostack <- raster::stack(layers)
 
 # remove intermediate files
 rm(layers, ascii_grids)
