@@ -42,7 +42,7 @@ strip.extension <- function(s){
 }
 
 read.sensor <-  function(filen){
-    td <- read.csv(filen,sep=",")
+    td <- read.csv(filen,sep=",", stringsAsFactors=FALSE)
     # fix any temps in farenheit
     td$Value[td$Unit == "F"] <- (5.0/9.0)  * (td$Value[td$Unit == "F"] - 32)
     td$dt <- mdy_hms(td$Date.Time, tz=iButtonTZ, truncated=1)

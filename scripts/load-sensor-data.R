@@ -16,6 +16,7 @@ library(plyr)
 library(reshape2)
 library(lubridate)
 library(xts)
+library(dplyr)
 
 # get_data()
 # Lazy evaluation function.
@@ -53,7 +54,7 @@ numfreezes <- function(x) {
 }
 
 # Turn a multi-column zoo time series into a (melted) data frame with sensor id
-# as a facor column the argument 'val' is a string that becomes the column name
+# as a factor column the argument 'val' is a string that becomes the column name
 # for the value field (eg "temperature", "rh")
 zoo2df <- function(df, val="temp"){
     t<- as.data.frame(df)
@@ -72,9 +73,9 @@ daily.summaries <- function(alltemps, humidity=FALSE){
     dtr <- aggregate(alltemps,as.Date(index(alltemps)), FUN=drange)
 
     ## daily summaries:
-    dailymin.df <- zoo2df(mintemps.daily,"min")
-    dailymax.df <- zoo2df(maxtemps.daily,"max")
-    dailymean.df <- zoo2df(maxtemps.daily,"mean")
+    dailymin.df <- zoo2df(mintemps.daily,"tmin")
+    dailymax.df <- zoo2df(maxtemps.daily,"tmax")
+    dailymean.df <- zoo2df(maxtemps.daily,"tmean")
     dtr.df <-  zoo2df(dtr,"dtr")
   
     return( Reduce(function(...) merge(..., all=T),
@@ -83,19 +84,12 @@ daily.summaries <- function(alltemps, humidity=FALSE){
 
 # monthly summaries
 monthly.summaries <- function(dailytemps){
-    dailytemps$yearmon <- factor(format(dailytemps$date, "%Y-%m"))
-    dailytemps$year    <- factor(format(dailytemps$date, "%Y"))
-    dailytemps$month   <- factor(format(dailytemps$date, "%m"))
-    avemax <- ddply(dailytemps, .(sensor,yearmon, year, month), summarize, avemax=mean(max))
-    avemin <- ddply(dailytemps, .(sensor,yearmon, year, month), summarize, avemin=mean(min))
-    meantemp <- ddply(dailytemps, .(sensor,yearmon, year, month), summarize, meant=mean(mean))
-    meandtr <- ddply(dailytemps, .(sensor,yearmon, year, month), summarize, dtr = mean(dtr))
-    freezes<- ddply(dailytemps, .(sensor,yearmon, year, month), summarize, nfreezes=numfreezes(min))
-    meandtr$dtr[is.infinite(meandtr$dtr)] <- NA
-    meandtr$dtr[is.nan(meandtr$dtr)] <- NA
-  
-    return(  Reduce(function(...) merge(..., all=T),
-                    list(freezes,avemax,avemin,meantemp,meandtr)))
+    res <- dailytemps %>%
+             mutate(year = year(datet), month = month(datet)) %>%
+             group_by(sensor, year, month) %>%
+             summarise(mtmax=mean(tmax), mtmin=mean(tmin), mtmean = mean(tmean),
+                       mdtr=mean(dtr), nfreezes = numfreezes(tmin) )
+    return( res %>% mutate(mdtr = ifelse(is.infinite(mdtr) | is.nan(mdtr), NA, mdtr) ) )
 }
 
 
@@ -103,7 +97,10 @@ monthly.summaries <- function(dailytemps){
 source("./iButton.R")
 
 # get time of last iButton merge
-if(! file.exists(BUILD_TIMESTAMP)) stop("Merged iButton data not found. Run build-merged-ibutton.py")
+if(! file.exists(BUILD_TIMESTAMP)) {
+    stop("Merged iButton data not found. Run build-merged-ibutton.py")
+}
+
 build_time <- scan(BUILD_TIMESTAMP, what="character", quiet=TRUE)
 build_time <- ymd_hms(paste(build_time, collapse=" "))
 
