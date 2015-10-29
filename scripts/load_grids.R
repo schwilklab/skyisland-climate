@@ -4,11 +4,13 @@
 ## object (from package 'raster'). requires packages raster, maptools
 
 GIS_DATA_DIR <- "../topo_grids"
+PROJ_STRING <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ## grid_names <- sub("[.][^.]*$", "", basename(ascii_grids))
 
 readGrid <- function(filename) {
     colname <- sub("[.][^.]*$", "", basename(filename))
-    grid <- maptools::readAsciiGrid(filename, colname=colname)
+    grid <- maptools::readAsciiGrid(filename, colname=colname,
+                                    proj4string=sp::CRS(PROJ_STRING))
     return(raster::raster(grid))
 }
 
