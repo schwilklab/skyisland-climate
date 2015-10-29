@@ -10,18 +10,18 @@ library(sp)
 library(dplyr)
 
 # Get the topgraphic data
-source("load_grids.R")
+# source("load_grids.R") # already happens in microclimate-topo-PCA now
 
 # get the PCA scores and loadings. Function called below returns list of PCA
 # objects, one for each mtn range. Use `force=TRUE` to rerun the PCAs,
 # otherwise the loadings and scores are read from a data object saved in the
 # results/tempdata directory.
 source("./microclimate-topo-PCA.R")
-PCAs <- loadPCAData()
+PCAs <- loadPCAData() # remember to delete old cached data if necessary!
 
 ## To make raster maps in ggplot quickly
 makeMap <- function(topolayer) {
-    map <- rasterToPoints(topolayer)
+    map <- raster::rasterToPoints(topolayer)
     map <- data.frame(map)
     names(map) <- c("x", "y", "var")
     ggplot(map, aes(x,y, fill=var)) +
@@ -49,7 +49,7 @@ splitdf <- function(dataframe) {
 checkCorrelations <- function(mtn, var) {
     loadings <- PCAs[[mtn]][[var]]$loadings
     ## find corelated variables
-    var.cors <- data.frame(cor(loadings[8:25]))
+    var.cors <- data.frame(cor(loadings[3:22]))
     var.cors$vars <- row.names(var.cors)
     ## PC1:
     print(paste("for mtn=", mtn, "and var=", var))
@@ -63,7 +63,7 @@ checkCorrelations <- function(mtn, var) {
 
 # fit the randomforest model
 fitRandomForest <- function(df, dep.var) {
-    ind.vars <- names(df)[8:20]
+    ind.vars <- names(df)[5:17]
     ind.vars <- paste(ind.vars, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
     model <- randomForest(formula, data = DM.tmin,
@@ -97,9 +97,9 @@ partialPlot(DM.tmin.mod, DM.tmin, "radiation")
 partialPlot(DM.tmin.mod, DM.tmin, "ldist_tovalley")
 
 ## Make the predicted loading surface
-DM.tmin.predPC1 <- raster::predict(topostack, DM.tmin.mod)
+DM.tmin.predPC1 <- raster::predict(DM.topostack, DM.tmin.mod)
 makeMap(DM.tmin.predPC1)
-writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
+raster::writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
             overwrite=TRUE)
 
 ###############################################################################
@@ -117,7 +117,7 @@ partialPlot(DM.tmax.mod, DM.tmax, "radiation")
 partialPlot(DM.tmax.mod, DM.tmax, "ldist_tovalley")
 
 ## Make the predicted loading surface
-DM.tmax.predPC1 <- raster::predict(topostack, DM.tmax.mod)
+DM.tmax.predPC1 <- raster::predict(DM.topostack, DM.tmax.mod)
 makeMap(DM.tmax.predPC1)
-writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmax.tif"),
+raster::writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmax.tif"),
             overwrite=TRUE)
