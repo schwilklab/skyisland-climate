@@ -3,9 +3,16 @@
 ## data exported (loaded into global namespace) as "topostack", a RasterStack
 ## object (from package 'raster'). requires packages raster, maptools
 
+source("./data-cache.R") # for get_data() function
+
+DATA_CACHE_DIR <- "../results/tempdata"
 GIS_DATA_DIR <- "../topo_grids"
 PROJ_STRING <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ## grid_names <- sub("[.][^.]*$", "", basename(ascii_grids))
+
+# get modification time for ascii grids to know if we need to rebuild
+GRID_TIMESTAMP_DM <- ymd_hms(file.info(list.files(path=file.path(GIS_DATA_DIR, "DM"),
+                                    pattern = "*.asc", full.names=TRUE)[1])$mtime)
 
 readGrid <- function(filename) {
     colname <- sub("[.][^.]*$", "", basename(filename))
@@ -26,10 +33,15 @@ readGridFolder <- function(fpath) {
 }
 
 # Now get a raster::stack object for each mtn range
-DM.topostack <- readGridFolder(file.path(GIS_DATA_DIR, "DM"))
+DM.topostack <- get_data(file.path(DATA_CACHE_DIR, "DM-grids.rds"), GRID_TIMESTAMP_DM,
+                         readGridFolder, fpath=file.path(GIS_DATA_DIR, "DM") )
+
 # TODO: save this as an r data object like with PCAs to save time in future
 
 # TODO: need grid data for other ranges
-#CM.topostack <- readGridFolder(file.path(GIS_DATA_DIR, "CM"))
-#GM.topostack <- readGridFolder(file.path(GIS_DATA_DIR, "GM"))
+#CM.topostack <- get_data(file.path(DATA_CACHE_DIR, "CM-grids.rds"), GRID_TIMESTAMP_CM,
+#                         readGridFolder, fpath=file.path(GIS_DATA_DIR, "CM") )
+# GM.topostack <- get_data(file.path(DATA_CACHE_DIR, "GM-grids.rds"), GRID_TIMESTAMP_GM,
+#                         readGridFolder, fpath=file.path(GIS_DATA_DIR, "GM") )
+
 

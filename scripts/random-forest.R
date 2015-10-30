@@ -5,18 +5,16 @@
 RSEED = 808
 set.seed(RSEED)
 
+source("./microclimate-topo-PCA.R")
+
 library(randomForest)
 library(sp)
 library(dplyr)
-
-# Get the topgraphic data
-# source("load_grids.R") # already happens in microclimate-topo-PCA now
 
 # get the PCA scores and loadings. Function called below returns list of PCA
 # objects, one for each mtn range. Use `force=TRUE` to rerun the PCAs,
 # otherwise the loadings and scores are read from a data object saved in the
 # results/tempdata directory.
-source("./microclimate-topo-PCA.R")
 PCAs <- loadPCAData() # remember to delete old cached data if necessary!
 
 ## To make raster maps in ggplot quickly
