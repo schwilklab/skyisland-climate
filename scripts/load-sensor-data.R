@@ -14,10 +14,9 @@ BUILD_TIMESTAMP <- "../microclimate/merged-ibutton/LAST_BUILD"
 
 source("./data-cache.R") # loads lubridate as well
 
-library(plyr)
-library(reshape2)
 library(xts)
 library(dplyr)
+library(tidyr)
 
 ###################################################################3
 ## Functions for data aggregation.  Dayly and monthly summaries
@@ -35,8 +34,7 @@ numfreezes <- function(x) {
 zoo2df <- function(df, val="temp"){
     t<- as.data.frame(df)
     t$date <- index(df)
-    t<-melt(t, id="date")
-    names(t) <- c("datet","sensor",val)
+    t <- t %>% gather(sensor, val, -date) %>% setNames(c("datet", "sensor", val))
     return(t)
 }
 

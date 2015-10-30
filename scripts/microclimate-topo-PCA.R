@@ -16,9 +16,8 @@ source("./load_grids.R")
 sensors <- read.csv("../microclimate/sensors.csv", stringsAsFactors=FALSE)
 
 library(ggplot2)
-library(reshape2)
-# see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
-library(pcaMethods)
+library(tidyr)
+library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
 library(dplyr)
 
 extractVals1Mtn <- function(mtn, topostack) {
@@ -73,8 +72,7 @@ runPCA <- function(wdata, minlength=1000, nPC = 5) {
 
 getTempPCA <- function(df) {
     # first step is to get data in a wide format with once columns per sensor
-    #df.melted <- melt(df, id.var = c("datet", "sensor"))
-    df.cast <- df %>% tidyr::gather(variable, value, -datet, -sensor) %>%
+    df.cast <- df %>% gather(variable, value, -datet, -sensor) %>%
         tidyr::spread(sensor, value)
     tmin <- df.cast %>% filter(variable=="tmin") %>% select(-variable)
     tmax <- df.cast %>% filter(variable=="tmax") %>% select(-variable)   
