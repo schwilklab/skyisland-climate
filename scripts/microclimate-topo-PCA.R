@@ -8,13 +8,6 @@
 # depends upon iButton.R (for sensor reading functions) and load-sensor-data.R
 # (to load summaries into workspace intelligently)
 
-
-library(ggplot2)
-library(reshape2)
-# see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
-library(pcaMethods)
-library(dplyr)
-
 # loads alltemps, temp.daily.sum and temp.monthly.sum
 source("./load-sensor-data.R")
 # Read in raster::Stack objects for each mtn range
@@ -22,6 +15,11 @@ source("./load_grids.R")
 # sensor locations
 sensors <- read.csv("../microclimate/sensors.csv", stringsAsFactors=FALSE)
 
+library(ggplot2)
+library(reshape2)
+# see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
+library(pcaMethods)
+library(dplyr)
 
 extractVals1Mtn <- function(mtn, topostack) {
     sensors.mtn <- dplyr::select(filter(sensors, mtn==mtn), sensor, lon, lat)
