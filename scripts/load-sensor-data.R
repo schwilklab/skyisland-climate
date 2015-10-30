@@ -12,36 +12,12 @@ DAILY_SUM <- "../results//tempdata/daily-sum.rds"
 MONTHLY_SUM <- "../results/tempdata/monthly-sum.rds"
 BUILD_TIMESTAMP <- "../microclimate/merged-ibutton/LAST_BUILD"
 
+source("./data-cache.R") # loads lubridate as well
+
 library(plyr)
 library(reshape2)
-library(lubridate)
 library(xts)
 library(dplyr)
-
-# get_data()
-# Lazy evaluation function.
-# args:
-#    dfile: path to file for rds R data object
-#    time: time to check against.
-#    func: Function to call if dfile modification time is older than time
-#    ...: additional arguments handed to func.
-get_data <- function(dfile, time, func, ...) {
-    data.time <- ymd("2010-01-01") # earlier than any data in case file does
-                                   # not even exist, below
-    if(file.exists(dfile)) {
-        data.time <- ymd_hms(file.info(dfile)$mtime)
-    }
-
-    if (time > data.time) {
-        dots <- list(...) 
-        res <- do.call(func, dots)
-        saveRDS(res, file = dfile)
-    } else {
-        res <-  readRDS(dfile)
-    }
-    return(res)
-}
-
 
 ###################################################################3
 ## Functions for data aggregation.  Dayly and monthly summaries
