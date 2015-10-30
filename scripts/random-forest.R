@@ -90,9 +90,9 @@ DM.tmin.mod
 varImpPlot(DM.tmin.mod, type=1)
 partialPlot(DM.tmin.mod, DM.tmin, "elev")
 partialPlot(DM.tmin.mod, DM.tmin, "relelev_z")
-partialPlot(DM.tmin.mod, DM.tmin, "relelev_watershed_minmax")
+partialPlot(DM.tmin.mod, DM.tmin, "relelev_shed")
 partialPlot(DM.tmin.mod, DM.tmin, "radiation")
-partialPlot(DM.tmin.mod, DM.tmin, "ldist_tovalley")
+partialPlot(DM.tmin.mod, DM.tmin, "ldist_valley")
 
 ## Make the predicted loading surface
 DM.tmin.predPC1 <- raster::predict(DM.topostack, DM.tmin.mod)
@@ -110,9 +110,9 @@ DM.tmax.mod
 varImpPlot(DM.tmax.mod, type=1)
 partialPlot(DM.tmax.mod, DM.tmax, "elev")
 partialPlot(DM.tmax.mod, DM.tmax, "relelev_z")
-partialPlot(DM.tmax.mod, DM.tmax, "relelev_watershed_minmax")
+partialPlot(DM.tmax.mod, DM.tmax, "relelev_shed")
 partialPlot(DM.tmax.mod, DM.tmax, "radiation")
-partialPlot(DM.tmax.mod, DM.tmax, "ldist_tovalley")
+partialPlot(DM.tmax.mod, DM.tmax, "ldist_valley")
 
 ## Make the predicted loading surface
 DM.tmax.predPC1 <- raster::predict(DM.topostack, DM.tmax.mod)
