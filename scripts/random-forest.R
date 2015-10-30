@@ -99,7 +99,7 @@ partialPlot(DM.tmin.mod, DM.tmin, "ldist_tovalley")
 ## Make the predicted loading surface
 DM.tmin.predPC1 <- raster::predict(DM.topostack, DM.tmin.mod)
 makeMap(DM.tmin.predPC1)
-raster::writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
+raster::writeRaster(DM.tmin.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
             overwrite=TRUE)
 
 ###############################################################################
