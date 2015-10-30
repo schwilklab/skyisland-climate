@@ -20,20 +20,19 @@ library(tidyr)
 library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
 library(dplyr)
 
-extractVals1Mtn <- function(mtn, topostack) {
-    sensors.mtn <- dplyr::select(filter(sensors, mtn==mtn), sensor, lon, lat)
+extractVals1Mtn <- function(themtn, topostack) {
+    sensors.mtn <- sensors %>% filter(mtn==themtn) %>% select(sensor, mtn, lon, lat)
     coords.sp <-sp::SpatialPoints(dplyr::select(sensors.mtn, lon, lat),
-                              proj4string=sp::CRS(PROJ_STRING) )
+                                  proj4string=sp::CRS(PROJ_STRING) )
     return(cbind(sensors.mtn, raster::extract(topostack, coords.sp)))
 }
 
 # TODO do for all mtn ranges once data is available
 sensors.DM.topo <- extractVals1Mtn("DM", DM.topostack)
-#sensors.CM <- extractVals1Mtn("CM", CM.topostack)
-#sensors.GM <- extractVals1Mtn("GM", GM.topostack)
+sensors.CM.topo <- extractVals1Mtn("CM", CM.topostack)
+sensors.GM.topo  <- extractVals1Mtn("GM", GM.topostack)
 
-sensors.topo <- sensors %>% select(sensor, mtn) %>%
-    left_join(sensors.DM.topo, by="sensor") # TODO: add CM, GM
+sensors.topo <- bind_rows(sensors.DM.topo, sensors.CM.topo, sensors.GM.topo)
 
 # helper functions
 jan2feb <- function(m){
@@ -111,10 +110,10 @@ loadPCAData <- function(force=FALSE) {
     # note grid timestamps are read from .asc files in load_grids.R
     DM.PCA <- get_data(DM.PCA.file, GRID_TIMESTAMP_DM, loadPCAData.mtn,
                        themtn = "DM", dailysum = dailysum)
-    ## CM.PCA <- get_data(CM.PCA.file, GRID_TIMESTAMP_CM, loadPCAData.mtn,
-    ##                    themtn = "CM", dailysum = dailysum)
-    ## GM.PCA <- get_data(GM.PCA.file, GRID_TIMESTAMP_GM, loadPCAData.mtn,
-    ##                    themtn = "GM", dailysum = dailysum)
+    CM.PCA <- get_data(CM.PCA.file, GRID_TIMESTAMP_CM, loadPCAData.mtn,
+                       themtn = "CM", dailysum = dailysum)
+    GM.PCA <- get_data(GM.PCA.file, GRID_TIMESTAMP_GM, loadPCAData.mtn,
+                       themtn = "GM", dailysum = dailysum)
 
-    return(list("DM" = DM.PCA)) # TODO should return list of all three mtn ranges
+    return(list("DM" = DM.PCA, "CM" = CM.PCA, "GM" = GM.PCA))
 }
