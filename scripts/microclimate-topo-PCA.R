@@ -93,39 +93,32 @@ getTempPCA <- function(df) {
 plot_output <- "../results/plots/"
 data_output <- "../results/tempdata/"
 
-# function to load the PCA scores and loadings into the workspace. To save
-# running time, this checks to see if the csv files already exist and if they
-# do, simply reads these rather than rerunning the PCAs. Unless force=TRUE, in
-# which case the PCAs are rerun.
-loadPCAData <- function(force=FALSE) {
-    DM.PCA.file <- file.path(data_output, "DM-PCA.RData")
-  #  CM.PCA.file <- file.path(data_output, "CM-PCA.RData")
-  #  GM.PCA.file <- file.path(data_output, "GM-PCA.RData")
-
-    if (all(file.exists(DM.PCA.file))) { #, file.exists(CM.PCA.file), file.exists(GM.PCA.file))) {
-        DM.PCA <- readRDS(DM.PCA.file)
- #       GM.PCA <- readRDS(GM.PCA.file)
- #       CM.PCA <- readRDS(CM.PCA.file)
-    } else {
-        # run the PCA and save output to R data object
-        # merge summaries with sensor location data
-        temp.daily.sum.mtn <- temp.daily.sum %>% merge(dplyr::select(sensors, sensor, mtn))
-        DM.PCA <- getTempPCA(subset(temp.daily.sum.mtn, mtn=="DM")[, 1:4])
-  #      CM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="CM")[, 1:4])
-  #      GM.PCA <- getTempPCA(subset(temp.daily.sum, mtn=="GM")[, 1:4])
-
-        saveRDS(DM.PCA, DM.PCA.file)
-   #     saveRDS(CM.PCA, CM.PCA.file)
-   #     saveRDS(GM.PCA, GM.PCA.file)
-    }
-    return(list("DM" = DM.PCA)) # TODO should return list of all three mtn ranges
+# run one PCA
+loadPCAData.mtn <- function(themtn, dailysum) {
+    return(getTempPCA(subset(dailysum, mtn==themtn)[, 1:4]))
 }
 
 
-# some exmaple plots on tmin
-##plot(DM.PCA$tmin$loadings[, c("elev", "relelev_z", "zdist_valley", "MSD", "PC1", "PC2", "PC3")])
+# Load the PCA scores and loadings into the workspace. To save running time,
+# this checks to see if the csv files already exist and if they do, simply
+# reads these rather than rerunning the PCAs. Unless force=TRUE, in which case
+# the PCAs are rerun.
+loadPCAData <- function(force=FALSE) {
 
-## qplot(elev, PC1, data=DM.PCA$tmin$loadings)
-## qplot(MSD, PC2, data=DM.PCA$tmin$loadings)
-## qplot(relelev_watershed_minmax, PC1, data=DM.PCA$tmin$loadings)
-## qplot(relelev_watershed_minmax, PC2, data=DM.PCA$tmin$loadings)
+    DM.PCA.file <- file.path(data_output, "DM-PCA.rds")
+    CM.PCA.file <- file.path(data_output, "CM-PCA.rds")
+    GM.PCA.file <- file.path(data_output, "GM-PCA.rds")
+
+    # get daily temperature sum with mtn id column for splitting:
+    dailysum <- temp.daily.sum %>% merge(dplyr::select(sensors, sensor, mtn))
+
+    # note grid timestamps are read from .asc files in load_grids.R
+    DM.PCA <- get_data(DM.PCA.file, GRID_TIMESTAMP_DM, loadPCAData.mtn,
+                       themtn = "DM", dailysum = dailysum)
+    ## CM.PCA <- get_data(CM.PCA.file, GRID_TIMESTAMP_CM, loadPCAData.mtn,
+    ##                    themtn = "CM", dailysum = dailysum)
+    ## GM.PCA <- get_data(GM.PCA.file, GRID_TIMESTAMP_GM, loadPCAData.mtn,
+    ##                    themtn = "GM", dailysum = dailysum)
+
+    return(list("DM" = DM.PCA)) # TODO should return list of all three mtn ranges
+}
