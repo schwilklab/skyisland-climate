@@ -27,5 +27,13 @@ Not that this will require installing [Rtools for windows](http://cran.r-project
 
 Requires a working python installation
 
+## Specific Methods ##
+
+### Details on iButton sensors ###
 
 See [the microclimate README](./microclimate/README.md) for more information.
+
+
+### Topographic variable calculations ###
+
+See [the methods document](./methods/topo_grid_methods.md) for more information.
