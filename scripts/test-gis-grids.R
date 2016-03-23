@@ -22,6 +22,7 @@ ggplot(topodf, aes(x,y, fill=log10(flow_accum))) + geom_raster()
 ggplot(topodf, aes(x=flow_accum)) + geom_histogram()
 # Something is wrong with those super high outliers
 quantile(topodf$flow_accum, c(0.1, 0.25, 0.5, 0.95, 1), na.rm=TRUE)
+any(is.na(topodf$flow_accum))
 # missing values in DM at least!
 
 ggplot(topodf, aes(x,y, fill=ldist_ridge)) + geom_raster()
