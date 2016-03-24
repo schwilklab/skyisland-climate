@@ -38,7 +38,7 @@ DEM-terrain derivatives
 
 13. zdist_ridge: Subtract the elev layer from the elev layer to generate a new layer that gives you the difference in elevation (m) from the pixel to the nearest (Euclidean distance) ridge.
 
-14. z_distvalley: Subtract the elev layer from the z_valley layer to generate a new layer that gives you the difference in elevation (m) from the pixel to the nearest (Euclidean distance) valley.
+14. zdist_valley: Subtract the elev layer from the z_valley layer to generate a new layer that gives you the difference in elevation (m) from the pixel to the nearest (Euclidean distance) valley.
 
 15. z_ridge: Use the Euclidean allocation toolbox under the distance section of Spatial Analyst. Specify the ridges (layer generated in step [] [TODO]) as the input raster or feature source data, and specify the elevation layer as the input value raster. Under environments, specify the elev layer as the cell size, mask, and output extent.
 
