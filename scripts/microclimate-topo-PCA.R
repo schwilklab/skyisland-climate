@@ -15,6 +15,9 @@ source("./load_grids.R")
 # sensor locations
 sensors <- read.csv("../microclimate/sensors.csv", stringsAsFactors=FALSE)
 
+# projection string for sensor data. This should match the ascii grids
+PROJ_STRING <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
 library(ggplot2)
 library(tidyr)
 library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
