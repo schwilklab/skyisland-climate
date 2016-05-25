@@ -113,10 +113,24 @@ map_var(CM.topodf, "radiation", CM.zoommap)
 map_var(DM.topodf, "radiation", DM.googlemap)
 map_var(GM.topodf, "radiation", GM.zoommap)
 
-ggplot(CM.topodf, aes(x=radiation)) + geom_histogram()
-ggsave("../results/plots/radiation-issue-CM-example-hist.png")
+# I see artifacts.
+# zoom in:
+ggplot(aes(x=x, y=y, fill=radiation), data=GM.topodf) +
+    geom_raster() +
+    xlim(c(-104.9, -104.8 )) +
+    ylim(c(31.9,32))
+ggsave("../results/plots/radiation-gm-zoom-artifacts.png")
 
-# Nope, bad data -- see outliers to right?
+# is the problem in the elev layer?
+ggplot(aes(x=x, y=y, fill=elev), data=GM.topodf) +
+    geom_raster() +
+    xlim(c(-104.9, -104.8 )) +
+    ylim(c(31.9,32))
+
+ggplot(CM.topodf, aes(x=radiation)) + geom_histogram()
+# ok, but distribution has been fixed
+
+
 ggplot(CM.topodf, aes(x=slope, y=radiation, color=elev)) + geom_point()
 ggsave("../results/plots/radiation-issue-CM-example.png")
 
