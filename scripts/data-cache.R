@@ -21,8 +21,9 @@ library(lubridate)
 #    func: Function to call if dfile modification time is older than time
 #    ...: additional arguments handed to func.
 get_data <- function(dfile, time, func, ...) {
-    data.time <- ymd("1900-01-01") # earlier than any data in case file does
-                                   # not even exist, below
+    data.time <- ymd_hms("1900-01-01 1:00:00 UTC") # earlier than any data in
+                                                   # case file does not even
+                                                   # exist, below
     if(file.exists(dfile)) {
         data.time <- ymd_hms(file.info(dfile)$mtime)
     }
