@@ -12,11 +12,11 @@ GIS_DATA_DIR <- "../topo_grids"
 
 # get modification time for ascii grids to know if we need to rebuild
 GRID_TIMESTAMP_DM <- ymd_hms(file.info(list.files(path=file.path(GIS_DATA_DIR, "DM"),
-                                    pattern = "*.asc", full.names=TRUE)[1])$mtime)
+                                    pattern = "*.asc", full.names=TRUE)[3])$mtime)
 GRID_TIMESTAMP_CM <- ymd_hms(file.info(list.files(path=file.path(GIS_DATA_DIR, "CM"),
-                                                  pattern = "*.asc", full.names=TRUE)[1])$mtime)
+                                                  pattern = "*.asc", full.names=TRUE)[3])$mtime)
 GRID_TIMESTAMP_GM <- ymd_hms(file.info(list.files(path=file.path(GIS_DATA_DIR, "GM"),
-                                    pattern = "*.asc", full.names=TRUE)[1])$mtime)
+                                    pattern = "*.asc", full.names=TRUE)[3])$mtime)
 
 readGridFolder <- function(fpath) {
     ## get list of grid files
