@@ -138,10 +138,10 @@ ggmap(CM.zoommap) + coord_cartesian() +
                          midpoint=quantile(CM.topodf$radiation, 0.1, na.rm=TRUE))
 #ggsave("../results/plots/radiation_dm_map.png")
 
-# relelev_l # deleted
-#map_var(CM.topodf, "relelev_l", CM.zoommap)
-#map_var(DM.topodf, "relelev_l", DM.googlemap)
-#map_var(GM.topodf, "relelev_l", GM.zoommap)
+# relev_l # renamed
+map_var(CM.topodf, "relev_l", CM.zoommap)
+map_var(DM.topodf, "relev_l", DM.googlemap)
+map_var(GM.topodf, "relev_l", GM.zoommap)
 # Can't trust this as it depends upon the ridge definition (issue #29)
 
 
@@ -154,7 +154,7 @@ ggmap(CM.zoommap) + coord_cartesian() +
 # continuous. Opened issue #32
 
 
-# relelev_z  # It hought we wanted this one?
+# relelev_z  # I thought we wanted this one?
 #map_var(CM.topodf, "relelev_z", CM.zoommap)
 #map_var(DM.topodf, "relelev_z", DM.googlemap)
 #map_var(GM.topodf, "relelev_z", GM.googlemap)
