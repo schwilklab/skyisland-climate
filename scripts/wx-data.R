@@ -24,8 +24,10 @@ library(repmis) # for reading data from dropbox
 ## Then run sudo ldconfig
 
 # historical data location
-hist_data_file <- "sky-island-historical-wx-data.csv"
-hist_data_id <- "ly4s9lbv1itmh06"
+hist_data_file <- "https://www.dropbox.com/s/ly4s9lbv1itmh06/sky-island-historical-wx-data.csv?raw=1"
+
+## "sky-island-historical-wx-data.csv"
+## hist_data_id <- "ly4s9lbv1itmh06"
 
 # Projected data location
 proj_data <- "~/science/projects/sky-island/projects/CSC-downscaled_projections"
@@ -77,7 +79,13 @@ read_projected_wx <- function(d=proj_data) {
 #proj_wx <- read_projected_wx()
 
 
+hist_wx_data <- read.csv(hist_data_file, stringsAsFactors=FALSE, na.strings="-9999")
+hist_wx_data$datet <- as.Date(as.character(hist_wx_data$DATE), "%Y%m%d" )
 
 
+# date ranges
 
+tx <- hist_wx_data %>% filter(!is.na(TMIN) & !is.na(TMAX)) %>% group_by(STATION_NAME) %>%
+  summarize(mindate = min(DATE), maxdate=max(DATE))
 
+#ggplot(hist_wx_data, aes(datet, TMIN)) + geom_line() + facet_grid( STATION_NAME ~ .)
