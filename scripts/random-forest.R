@@ -101,13 +101,13 @@ fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
   ## partialPlot(DM.tmin.mod, DM.tmin, "ldist_valley")
 
 
-predictions <- list()
+load.predictions <- list()
 for (mtn in c("CM", "DM", "GM")) {
-  predictions[[mtn]] <- list()
+  load.predictions[[mtn]] <- list()
   for (v in c("tmin", "tmax")) {
-    predictions[[mtn]][[v]] <- list()
+    load.predictions[[mtn]][[v]] <- list()
     for(a in c("PC1", "PC2", "PC3")) {
-      predictions[[mtn]][[v]][[a]] <- fitModelRunDiagnostics(mtn, v, a)
+      load.predictions[[mtn]][[v]][[a]] <- fitModelRunDiagnostics(mtn, v, a)
     }
   }
 }
@@ -136,70 +136,4 @@ for (mtn in c("CM", "DM", "GM")) {
 ## DM.tmin.predPC1 <- raster::predict(DM.topostack, DM.tmin.mod)
 ## makeMap(DM.tmin.predPC1)
 ## raster::writeRaster(DM.tmin.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
-##             overwrite=TRUE)
-
-## ###############################################################################
-## ## DM TMAX
-## ###############################################################################
-## DM.tmax <- PCAs[["DM"]][["tmax"]]$loadings
-## DM.tmax.mod <- fitRandomForest(DM.tmax, "PC1")
-## DM.tmax.mod
-## ## what are the important variables (via permutation)
-## varImpPlot(DM.tmax.mod, type=1)
-## partialPlot(DM.tmax.mod, DM.tmax, "elev")
-## partialPlot(DM.tmax.mod, DM.tmax, "relev_l")
-## partialPlot(DM.tmax.mod, DM.tmax, "ldist_valley")
-## partialPlot(DM.tmax.mod, DM.tmax, "radiation")
-## partialPlot(DM.tmax.mod, DM.tmax, "ldist_ridge")
-
-## ## Make the predicted loading surface
-## DM.tmax.predPC1 <- raster::predict(DM.topostack, DM.tmax.mod)
-## makeMap(DM.tmax.predPC1)
-## raster::writeRaster(DM.tmax.predPC1, file=file.path(data_output, "predPC1_tmax.tif"),
-##             overwrite=TRUE)
-
-
-
-## ###############################################################################
-## ## CM TMIN
-## ###############################################################################
-
-## ## If we want tosplit into training and testing data:
-## ## CM.tmin <- splitdf(PCAs[["CM"]][["tmin"]]$loadings)
-
-## CM.tmin <- PCAs[["CM"]][["tmin"]]$loadings
-## CM.tmin.mod <- fitRandomForest(CM.tmin, "PC1")
-## CM.tmin.mod
-## ## what are the important variables (via permutation)
-## varImpPlot(CM.tmin.mod, type=1)
-## partialPlot(CM.tmin.mod, CM.tmin, "elev")
-## partialPlot(CM.tmin.mod, CM.tmin, "relev_l")
-## partialPlot(CM.tmin.mod, CM.tmin, "ldist_valley")
-## partialPlot(CM.tmin.mod, CM.tmin, "radiation")
-## partialPlot(CM.tmin.mod, CM.tmin, "ldist_valley")
-
-## ## Make the predicted loading surface
-## CM.tmin.predPC1 <- raster::predict(CM.topostack, CM.tmin.mod)
-## makeMap(CM.tmin.predPC1)
-## raster::writeRaster(CM.tmin.predPC1, file=file.path(data_output, "CM.predPC1_tmin.tif"),
-##             overwrite=TRUE)
-
-## ###############################################################################
-## ## CM TMAX
-## ###############################################################################
-## CM.tmax <- PCAs[["CM"]][["tmax"]]$loadings
-## CM.tmax.mod <- fitRandomForest(CM.tmax, "PC1")
-## CM.tmax.mod
-## ## what are the important variables (via permutation)
-## varImpPlot(CM.tmax.mod, type=1)
-## partialPlot(CM.tmax.mod, CM.tmax, "elev")
-## partialPlot(CM.tmax.mod, CM.tmax, "relev_l")
-## partialPlot(CM.tmax.mod, CM.tmax, "ldist_valley")
-## partialPlot(CM.tmax.mod, CM.tmax, "radiation")
-## partialPlot(CM.tmax.mod, CM.tmax, "ldist_ridge")
-
-## ## Make the predicted loading surface
-## CM.tmax.predPC1 <- raster::predict(CM.topostack, CM.tmax.mod)
-## makeMap(CM.tmax.predPC1)
-## raster::writeRaster(CM.tmax.predPC1, file=file.path(data_output, "predPC1_tmax.tif"),
 ##             overwrite=TRUE)
