@@ -24,10 +24,8 @@ library(repmis) # for reading data from dropbox
 ## Then run sudo ldconfig
 
 # historical data location
-hist_data_file <- "https://www.dropbox.com/s/ly4s9lbv1itmh06/sky-island-historical-wx-data.csv?raw=1"
-
-## "sky-island-historical-wx-data.csv"
-## hist_data_id <- "ly4s9lbv1itmh06"
+hist_data_file <- "https://www.dropbox.com/s/2nx1kuyuswhd984/sky-island-historical-wx-data.csv?raw=1"
+#hist_data_file <- "../wx-station-data/sky-island-historical-wx-data.csv"
 
 # Projected data location
 proj_data <- "~/science/projects/sky-island/projects/CSC-downscaled_projections"
@@ -79,13 +77,22 @@ read_projected_wx <- function(d=proj_data) {
 #proj_wx <- read_projected_wx()
 
 
-hist_wx_data <- read.csv(hist_data_file, stringsAsFactors=FALSE, na.strings="-9999")
-hist_wx_data$datet <- as.Date(as.character(hist_wx_data$DATE), "%Y%m%d" )
+hist_wx_data <- read.csv(hist_data_file, stringsAsFactors=FALSE, na.strings="-9999") %>%
+  filter( !(is.na(TMIN) | is.na(TMAX) | is.na(PRCP) )) %>%
+  mutate(datet = as.Date(as.character(DATE), "%Y%m%d" ),
+         TMIN = (TMIN-32) * 0.5556,
+         TMAX = (TMAX-32) * 0.5556,
+         PRCP = PRCP * 25.4) 
+
+
 
 
 # date ranges
 
-tx <- hist_wx_data %>% filter(!is.na(TMIN) & !is.na(TMAX)) %>% group_by(STATION_NAME) %>%
+hist_wx_data %>% filter(!is.na(TMIN) & !is.na(TMAX) & !is.na(PRCP)) %>% group_by(STATION_NAME) %>%
   summarize(mindate = min(DATE), maxdate=max(DATE))
+
+stations <- read.csv("../microclimate/wx-stations.csv", stringsAsFactors=FALSE)
+hist_wx_data <- left_join(hist_wx_data, stations)
 
 #ggplot(hist_wx_data, aes(datet, TMIN)) + geom_line() + facet_grid( STATION_NAME ~ .)
