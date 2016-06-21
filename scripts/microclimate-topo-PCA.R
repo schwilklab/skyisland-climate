@@ -23,17 +23,17 @@ library(tidyr)
 library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
 library(dplyr)
 
-extractVals1Mtn <- function(themtn, topostack) {
-    sensors.mtn <- sensors %>% filter(mtn==themtn) %>% select(sensor, mtn, lon, lat)
-    coords.sp <-sp::SpatialPoints(dplyr::select(sensors.mtn, lon, lat),
-                                  proj4string=sp::CRS(PROJ_STRING) )
-    return(cbind(sensors.mtn, raster::extract(topostack, coords.sp)))
+extractVals1Mtn <- function(themtn, topostacks) {
+    sensors.mtn <- sensors %>% filter(mtn==themtn) %>% dplyr::select(sensor, mtn, lon, lat)
+    coords.sp <- sp::SpatialPoints(dplyr::select(sensors.mtn, lon, lat),
+                                   proj4string=sp::CRS(PROJ_STRING) )
+    return(cbind(sensors.mtn, raster::extract(topostacks[[themtn]], coords.sp)))
 }
 
 # TODO do for all mtn ranges once data is available
-sensors.DM.topo <- extractVals1Mtn("DM", DM.topostack)
-sensors.CM.topo <- extractVals1Mtn("CM", CM.topostack)
-sensors.GM.topo  <- extractVals1Mtn("GM", GM.topostack)
+sensors.DM.topo <- extractVals1Mtn("DM", topostacks)
+sensors.CM.topo <- extractVals1Mtn("CM", topostacks)
+sensors.GM.topo <- extractVals1Mtn("GM", topostacks)
 
 sensors.topo <- bind_rows(sensors.DM.topo, sensors.CM.topo, sensors.GM.topo)
 

@@ -30,16 +30,18 @@ readGridFolder <- function(fpath) {
 }
 
 # Now get a raster::stack object for each mtn range
-DM.topostack <- get_data(file.path(DATA_CACHE_DIR, "DM-grids.rds"), GRID_TIMESTAMP_DM,
+topostacks <- list()
+topostacks[["DM"]] <- get_data(file.path(DATA_CACHE_DIR, "DM-grids.rds"), GRID_TIMESTAMP_DM,
                          readGridFolder, fpath=file.path(GIS_DATA_DIR, "DM") )
-CM.topostack <- get_data(file.path(DATA_CACHE_DIR, "CM-grids.rds"), GRID_TIMESTAMP_CM,
+topostacks[["CM"]] <- get_data(file.path(DATA_CACHE_DIR, "CM-grids.rds"), GRID_TIMESTAMP_CM,
                          readGridFolder, fpath=file.path(GIS_DATA_DIR, "CM") )
-GM.topostack <- get_data(file.path(DATA_CACHE_DIR, "GM-grids.rds"), GRID_TIMESTAMP_GM,
+topostacks[["GM"]] <- get_data(file.path(DATA_CACHE_DIR, "GM-grids.rds"), GRID_TIMESTAMP_GM,
                          readGridFolder, fpath=file.path(GIS_DATA_DIR, "GM") )
 
 
 # now get all of these raster layers in data frame format for plotting and
 # analysis
-CM.topodf <- data.frame(rasterToPoints(CM.topostack))
-DM.topodf <- data.frame(rasterToPoints(DM.topostack))
-GM.topodf <- data.frame(rasterToPoints(GM.topostack))
+topodfs <- list()
+topodfs[["CM"]] <- data.frame(rasterToPoints(topostacks[["CM"]]))
+topodfs[["DM"]] <- data.frame(rasterToPoints(topostacks[["DM"]]))
+topodfs[["GM"]] <- data.frame(rasterToPoints(topostacks[["GM"]]))
