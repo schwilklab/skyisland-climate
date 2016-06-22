@@ -5,22 +5,19 @@
 RSEED = 808
 set.seed(RSEED)
 
-source("./microclimate-topo-PCA.R")
+source("./microclimate-topo-PCA.R") # provides PCAs object
 
 TOPO_RES_DIR <- "../results/topo_mod_results/"
 
-IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope",
-                 "zdist_ridge",   "zdist_valley")
+## IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope",
+##                  "zdist_ridge",   "zdist_valley")
+
+IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope")
 
 library(randomForest)
 library(sp)
 library(dplyr)
-
-# get the PCA scores and loadings. Function called below returns list of PCA
-# objects, one for each mtn range. Use `force=TRUE` to rerun the PCAs,
-# otherwise the loadings and scores are read from a data object saved in the
-# results/tempdata directory.
-PCAs <- loadPCAData() # remember to delete old cached data if necessary!
+library(GGally) # for ggpairs()
 
 ## To make raster maps in ggplot quickly
 makeMap <- function(topolayer) {
@@ -51,8 +48,10 @@ splitdf <- function(dataframe) {
 # correlation coefficences greater than 0.5.
 checkCorrelations <- function(mtn, var) {
     loadings <- PCAs[[mtn]][[var]]$loadings
+    colNums <- match(c(IND_VAR_NAMES, c("PC1", "PC2", "PC3")), names(loadings))
+    df <- loadings[colNums]
     ## find corelated variables
-    var.cors <- data.frame(cor(loadings[3:21]))
+    var.cors <- data.frame(cor(df))
     var.cors$vars <- row.names(var.cors)
     ## PC1:
     print(paste("for mtn=", mtn, "and var=", var))
@@ -63,7 +62,13 @@ checkCorrelations <- function(mtn, var) {
     print(var.cors %>% filter(abs(PC2) > 0.5) %>% dplyr::select(vars, PC2))
         ## PC2:
     print("PC3 correlates:")
-    print(var.cors %>% filter(abs(PC3) > 0.5) %>% dplyr::select(vars, PC2))
+    print(var.cors %>% filter(abs(PC3) > 0.5) %>% dplyr::select(vars, PC3))
+    png(file.path(TOPO_RES_DIR, paste(mtn, "_", var, "_splot", ".png", sep="")),
+        height=1200, width=1200)
+    g <- ggpairs(df)
+    print(g)
+    dev.off()
+    
 }
 
 
@@ -79,17 +84,13 @@ fitRandomForest <- function(df, dep.var) {
 
 fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
   # split and redirect output
-  sink(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".txt", sep="")),
-       append = FALSE, split = TRUE)
-  checkCorrelations(mtn, dep.var)  
+  print(paste(mtn, dep.var, axis))
   mod <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
   print(mod)
   png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
   varImpPlot(mod, type=1)
   dev.off()
-
   res <- raster::predict(topostacks[[mtn]], mod)
-  sink(NULL)
   return(res)
 }
 
@@ -105,11 +106,15 @@ load.predictions <- list()
 for (mtn in c("CM", "DM", "GM")) {
   load.predictions[[mtn]] <- list()
   for (v in c("tmin", "tmax")) {
+    sink(file = file.path(TOPO_RES_DIR, paste(mtn, "_", v, ".txt", sep="")),
+         append = FALSE, split = TRUE)
+    checkCorrelations(mtn, v)
     load.predictions[[mtn]][[v]] <- list()
     for(a in c("PC1", "PC2", "PC3")) {
       load.predictions[[mtn]][[v]][[a]] <- fitModelRunDiagnostics(mtn, v, a)
     }
   }
+  sink(NULL)
 }
 
 
