@@ -120,3 +120,6 @@ loadPCAData <- function(force=FALSE) {
 
     return(list("DM" = DM.PCA, "CM" = CM.PCA, "GM" = GM.PCA))
 }
+
+# load it
+PCAs <- loadPCAData()

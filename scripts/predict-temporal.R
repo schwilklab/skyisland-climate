@@ -7,7 +7,7 @@ TEMPO_RES_DIR <- "../results/tempo_mod_results/"
 
 source("wx-data.R") # provides hist_wx_data data frame
 
-# source("./microclimate-topo-PCA.R")  # must be run at some point
+source("./microclimate-topo-PCA.R")  # must be run at some point
 
 
 fitTemporalModelRunDiagnostics <- function(mtn, thevar) {
