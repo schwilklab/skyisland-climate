@@ -16,14 +16,14 @@ get_gmap <- function(df) {
 }
 
 # get some basemaps
-CM.googlemap <- get_gmap(CM.topodf)
-DM.googlemap <- get_gmap(DM.topodf)
-GM.googlemap <- get_gmap(GM.topodf)
+CM.googlemap <- get_gmap(topodfs$CM)
+DM.googlemap <- get_gmap(topodfs$DM)
+GM.googlemap <- get_gmap(topodfs$GM)
 
-GM.zoommap <- get_map(c(lon=mean(GM.topodf$x, na.rm=TRUE), lat=mean(GM.topodf$y, na.rm=TRUE)),
+GM.zoommap <- get_map(c(lon=mean(topodfs$GM$x, na.rm=TRUE), lat=mean(topodfs$GM$y, na.rm=TRUE)),
                    maptype="satellite", zoom=13)
 
-CM.zoommap <- get_map(c(lon=mean(CM.topodf$x, na.rm=TRUE), lat=mean(CM.topodf$y, na.rm=TRUE)),
+CM.zoommap <- get_map(c(lon=mean(topodfs$CM$x, na.rm=TRUE), lat=mean(topodfs$CM$y, na.rm=TRUE)),
                    maptype="satellite", zoom=12)
 
 # plot for one variable
@@ -35,6 +35,10 @@ map_var <- function(topodf, var, basemap) {
 }
 
 ## Checking each topo var one by one
+CM.topodf <- topodfs$CM
+GM.topodf <- topodfs$GM
+DM.topodf <- topodfs$DM
+
 
 #elev
 map_var(CM.topodf, "elev", CM.googlemap)
@@ -102,6 +106,8 @@ map_var(DM.topodf, "msd", DM.googlemap)
 map_var(GM.topodf, "msd", GM.zoommap)
 
 ggplot(CM.topodf, aes(x=msd)) + geom_histogram(binwidth=1)
+ggplot(DM.topodf, aes(x=msd)) + geom_histogram(binwidth=1)
+ggplot(GM.topodf, aes(x=msd)) + geom_histogram(binwidth=1)
 # Ok, but we'll need to think about how to sue this variable.
 
 # radiation
