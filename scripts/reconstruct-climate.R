@@ -41,10 +41,11 @@ getLoadingsDF <- function(mtn, v) {
 
 reconstructTemp <- function(mtn, v) {
   ploadings <- getLoadingsDF(mtn, v)
-  pscores <- score.predicttions[[mtn]][[v]]
-  # two issues: different number of pc axes. Need to fix. AND can't do matric
+  pscores <- score.predictions[[mtn]][[v]]
+  # two issues: different number of pc axes. Need to fix. AND can't do matrix
   # algebra on such big matrices. SOlution?
-  res <- as.matrix(pscores[,2:3]) %*% t(as.matrix(ploadings[,3:4])) # can't make matrix that big!
+  res <- as.matrix(dplyr::select(pscores, -datet)) %*%
+    t(as.matrix(dplyr::select(ploadings -x, -y))) # can't make matrix that big!
   return(res)
 }
 
