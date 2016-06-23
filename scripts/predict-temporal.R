@@ -8,7 +8,7 @@ TEMPO_RES_DIR <- "../results/tempo_mod_results/"
 source("wx-data.R") # provides hist_wx_data data frame
 source("./microclimate-topo-PCA.R")  # must be run at some point
 
-PC_AXES <- c("PC1", "PC2", "PC3")
+PC_AXES <- c("PC1", "PC2", "PC3") #fit all three for now?
 
 score.predictions <- list()
 for (mtn in c("CM", "DM", "GM")) {
@@ -31,8 +31,8 @@ for (mtn in c("CM", "DM", "GM")) {
         print(anova(bmod))
         predictions[[a]] <- predict(bmod, hist_data)
       }
-      predictions$datet <- hist_data$datet
-      score.predictions[[mtn]][[v]] <- do.call(cbind, predictions)
+      score.predictions[[mtn]][[v]] <- data.frame(do.call(cbind, predictions))
+      score.predictions[[mtn]][[v]] <- hist_data$datet
   }
   sink(NULL)
 }
