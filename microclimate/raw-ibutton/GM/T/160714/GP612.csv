@@ -1,22 +1,22 @@
-1-Wire/iButton Part Number: DS1922L,,
-1-Wire/iButton Registration Number: 4700000013BFC641,,
-Mission in Progress?  true,,
-SUTA Mission?  false,,
-Waiting for Temperature Alarm?  false,,
-Sample Rate:  Every 4000 second(s),,
-Mission Start Time:  Sun Mar 15 16:01:11 CDT 2015,,
-Mission Sample Count:  8192,,
-Roll Over Enabled?  false(no rollover occurred),,
-First Sample Timestamp:  Sun Mar 15 16:01:11 CDT 2015,,
-Total Mission Samples:  8192,,
-Total Device Samples:  44116,,
-Temperature Logging:  0.5 C,,
-Temperature High Alarm:  disabled,,
-Temperature Low Alarm:  disabled,,
-Data Logging:  disabled,,
-Data High Alarm:  disabled,,
-Data Low Alarm:  disabled,,
-,,
+1-Wire/iButton Part Number: DS1922L
+1-Wire/iButton Registration Number: 4700000013BFC641
+Mission in Progress?  true
+SUTA Mission?  false
+Waiting for Temperature Alarm?  false
+Sample Rate:  Every 4000 second(s)
+Mission Start Time:  Sun Mar 15 16:01:11 CDT 2015
+Mission Sample Count:  8192
+Roll Over Enabled?  false(no rollover occurred)
+First Sample Timestamp:  Sun Mar 15 16:01:11 CDT 2015
+Total Mission Samples:  8192
+Total Device Samples:  44116
+Temperature Logging:  0.5 C
+Temperature High Alarm:  disabled
+Temperature Low Alarm:  disabled
+Data Logging:  disabled
+Data High Alarm:  disabled
+Data Low Alarm:  disabled
+
 Date/Time,Unit,Value
 3/15/15 4:01:11 PM,C,15.688
 3/15/15 5:07:51 PM,C,12.683
