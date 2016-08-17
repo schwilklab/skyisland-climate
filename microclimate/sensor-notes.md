@@ -27,3 +27,9 @@ see when they fell.  2015-03-16: Looks like Nov 1 is good cut.
 3. The following sensors were replaced: SP601, SP603, MC604, MC605,
 MC607, MC607. All due to epoxy starting to fail. There was no trouble
 with data downloads.
+
+## GM Front country trip 2016-07-14 ##
+
+1. GP609: ibutton fell off hardware cloth was on ground. Data Looks OK through end of data, however.
+2. GP 611 and 612: radaiton shilds with ibuttons were on ground.  Looks like it happened in late fall.  Last good data appears to be 11/15/2015. Data cleaned and raw dta saved as GP612.raw
+3. GP 611 or 612 Humidity could not read mission.
