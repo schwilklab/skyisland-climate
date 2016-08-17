@@ -5,7 +5,7 @@ We have a network of temperature and relative humidity sensors deployed across t
 
 # Data storage capacity of iButtons #
    
-  - each sensor can hold 8160 logs [Check: 8192 logs]
+  - each sensor can hold 8192 logs
   - 15 minutes = 85 days
   - 30 minutes = 170 days
   - 40 minutes = 226 days
