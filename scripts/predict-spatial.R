@@ -14,7 +14,7 @@ set.seed(RSEED)
 ## If running this on its own, you need to source the file below first, but in
 ## the main workflow, this is sourced from reconstruct-climate.R
 
-#source("./microclimate-topo-PCA.R") # provides PCAs object
+source("./microclimate-topo-PCA.R") # provides PCAs object
 
 TOPO_RES_DIR <- "../results/topo_mod_results/"
 IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope")
@@ -123,6 +123,8 @@ for (mtn in c("CM", "DM", "GM")) {
 
 ## Provides load.predictions
 
+# and saves:
+saveRDS(load.predictions, file.path(TOPO_RES_DIR, "load_predictions.RDS"))
 
 
 ## ###############################################################################
