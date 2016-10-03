@@ -39,9 +39,10 @@ reconstructTemp <- function(mtn, v) {
   pscores <- score.predictions[[mtn]][[v]]
   # two issues: different number of pc axes. Need to fix. AND can't do matrix
   # algebra on such big matrices. Solution?
-  res <- as.matrix(dplyr::select(pscores, -datet)) %*%
-      t(as.matrix(dplyr::select(ploadings -x, -y))) # can't make matrix that big!
 
+  loadings_matrix <- t(as.matrix(dplyr::select(ploadings, -x, -y)))
+  scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
+  res <- scores_matrix %*% loadings_matrix
   res <- data.frame(res)
   names(res) <- PCAs[[mtn]][[v]]$loadings$sensor
   res$datet <- PCAs[[mtn]][[v]]$scores$datet
