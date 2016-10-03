@@ -85,10 +85,25 @@ runExamplePrediction <- function() {
     reproduce$datet <- PCAs[["DM"]][["tmin"]]$scores$datet
 
     write.csv(reproduce, "../results/DM-TMIN-example-reconstruct.csv")
+    return(NULL)
 }
 
 
 ## OK main script here:
 
-reconstructTemp("DM", "tmin")
+# wrapper takes vector with two strings, mtn and v:
+reconstructTempWrapper <- function(i) {
+    reconstructTemp(i[1], i[2])
+}
 
+
+
+library(parallel)
+no_cores <- detectCores()
+print(sprintf("%d cores detected", no_cores))
+
+cl <- makeCluster(no_cores, type="FORK")
+
+params <- as.data.frame(t(expand.grid(c("CM", "DM", "GM"), c("tmin", "tmax"))))
+parLapply(cl, params, reconstructTempWrapper)
+stopCluster(cl)
