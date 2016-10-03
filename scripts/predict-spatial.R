@@ -1,23 +1,31 @@
-## random-forest.R
-## Code to fit random forest models
+## predict-spatial.R
+## Authors: Helen Poulos and Dylan Schwilk
+
+## Code to fit random forest models to predict sensor locations "loadings"
+## across the landscapes. Produces a list, `load.predictions` which contains
+## results by mtn range and by variable. See reconstruct-climate.R for example
+## use. This code saves the model fit diagnostics under TOPO_RES_DIR defined
+## below
 
 ## Random number seed
 RSEED = 808
 set.seed(RSEED)
 
-source("./microclimate-topo-PCA.R") # provides PCAs object
+## If running this on its own, you need to source the file below first, but in
+## the main workflow, this is sourced from reconstruct-climate.R
+
+#source("./microclimate-topo-PCA.R") # provides PCAs object
 
 TOPO_RES_DIR <- "../results/topo_mod_results/"
-
-## IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope",
-##                  "zdist_ridge",   "zdist_valley")
-
 IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope")
 
 library(randomForest)
 library(sp)
 library(dplyr)
-#library(GGally) # for ggpairs()
+
+DO_PAIR_PLOTS <- FALSE
+if (require (GGally) ) DO_PAIR_PLOTS <- TRUE # for ggpairs() # may not be
+                                             # installed on hrothgar
 
 ## To make raster maps in ggplot quickly
 makeMap <- function(topolayer) {
@@ -44,8 +52,8 @@ splitdf <- function(dataframe) {
 
 
 # Just a quick and dirty check of most important pairwise correlations Just
-# checks PC1 and PC2 against all other variables and prints out pearson
-# correlation coefficences greater than 0.5.
+# checks PC1 -- PC3 against all other variables and prints out pearson
+# correlation coefficients greater than 0.5.
 checkCorrelations <- function(mtn, var) {
     loadings <- PCAs[[mtn]][[var]]$loadings
     colNums <- match(c(IND_VAR_NAMES, c("PC1", "PC2", "PC3")), names(loadings))
@@ -65,14 +73,15 @@ checkCorrelations <- function(mtn, var) {
     print(var.cors %>% filter(abs(PC3) > 0.5) %>% dplyr::select(vars, PC3))
     png(file.path(TOPO_RES_DIR, paste(mtn, "_", var, "_splot", ".png", sep="")),
         height=1200, width=1200)
-    g <- ggpairs(df)
-    print(g)
-    dev.off()
-    
+    if(DO_PAIR_PLOTS) {
+        g <- ggpairs(df)
+        print(g)
+        dev.off()
+    }
 }
 
 
-# fit the randomforest model
+# fit the random forest model
 fitRandomForest <- function(df, dep.var) {
     ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
@@ -95,13 +104,8 @@ fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
 }
 
   
-  ## partialPlot(DM.tmin.mod, DM.tmin, "elev")
-  ## partialPlot(DM.tmin.mod, DM.tmin, "relev_l")
-  ## partialPlot(DM.tmin.mod, DM.tmin, "ldist_valley")
-  ## partialPlot(DM.tmin.mod, DM.tmin, "radiation")
-  ## partialPlot(DM.tmin.mod, DM.tmin, "ldist_valley")
-
-
+## Main script
+##############
 load.predictions <- list()
 for (mtn in c("CM", "DM", "GM")) {
   load.predictions[[mtn]] <- list()
@@ -117,13 +121,15 @@ for (mtn in c("CM", "DM", "GM")) {
   sink(NULL)
 }
 
+## Provides load.predictions
+
 
 
 ## ###############################################################################
 ## ## DM TMIN
 ## ###############################################################################
 
-## ## If we want tosplit into training and testing data:
+## ## If we want to split into training and testing data:
 ## ## DM.tmin <- splitdf(PCAs[["DM"]][["tmin"]]$loadings)
 
 ## DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
