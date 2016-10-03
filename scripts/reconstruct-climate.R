@@ -88,5 +88,5 @@ runExamplePrediction <- function() {
 
 ## OK main script here:
 
-#reconstructTemp("DM", "tmin")
+reconstructTemp("DM", "tmin")
 
