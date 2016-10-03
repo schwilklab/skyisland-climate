@@ -8,7 +8,7 @@
 
 # 3. Fit linear models to rpedict PCA scores (temporal component) from historical time series wx station data
 
-# 4. use both predicitonst o reconsstruct predicted historical tmins and tmaxes
+# 4. use both predicitons to reconstruct predicted historical tmins and tmaxes
 # across the landscapes.
 
 source("./predict-temporal.R") # provides scores.predicted
@@ -23,7 +23,7 @@ rasterLayerToDF <- function(layer, name) {
 
 
 
-# hacky below. Sorry. SHould not need to hard code pc axes names
+# hacky below. Sorry. Should not need to hard code pc axes names
 getLoadingsDF <- function(mtn, v) {
   ploadings <- load.predictions[[mtn]][[v]]
   pc1 <- rasterLayerToDF(ploadings[["PC1"]], "PC1")
@@ -39,30 +39,54 @@ getLoadingsDF <- function(mtn, v) {
 ## WON't work because 1) I need to deal with issue of equal number of pc axes 2
 ## or 3? and 2) data is too big!
 
+# writes output to file
 reconstructTemp <- function(mtn, v) {
   ploadings <- getLoadingsDF(mtn, v)
   pscores <- score.predictions[[mtn]][[v]]
   # two issues: different number of pc axes. Need to fix. AND can't do matrix
-  # algebra on such big matrices. SOlution?
+  # algebra on such big matrices. Solution?
   res <- as.matrix(dplyr::select(pscores, -datet)) %*%
-    t(as.matrix(dplyr::select(ploadings -x, -y))) # can't make matrix that big!
-  return(res)
+      t(as.matrix(dplyr::select(ploadings -x, -y))) # can't make matrix that big!
+
+  res <- data.frame(res)
+  names(res) <- PCAs[[mtn]][[v]]$loadings$sensor
+  res$datet <- PCAs[[mtn]][[v]]$scores$datet
+  filename <- paste("reconstruct", "_", mtn, "_", v, ".csv", sep="")
+  write.csv(res, file.path("../results/", filename))
 }
 
 
-## tl <- load.predictions$DM$tmin
-## tl.pc1 <- as.data.frame(rasterToPoints(tl$PC1))
-## names(tl.pc1) <- c("x","y", "PC1")
-## tl.pc2 <- as.data.frame(rasterToPoints(tl$PC2))
-## names(tl.pc2) <- c("x","y", "PC2")
-## tl.all <- inner_join(tl.pc1, tl.pc2)
-## # testing on original pca data, not predicitons, for working out math:
 
-## test.load <- PCAs[["DM"]][["tmin"]]$loadings %>% dplyr::select(PC1, PC2, PC3)
-## test.scores <- PCAs[["DM"]][["tmin"]]$scores %>% dplyr::select(PC1, PC2, PC3)
+### Example on small dataset: sensor locaitons  only for the DM. This works and
+### gives numbers highly correlated witht he original values! Cool.
+runExamplePrediction <- function() {
 
-## reproduce <- as.matrix(test.scores) %*% t(as.matrix(test.load))
-## reproduce <- data.frame(reproduce)
-## names(reproduce) <- PCAs[["DM"]][["tmin"]]$loadings$sensor
-## reproduce$datet <- PCAs[["DM"]][["tmin"]]$scores$datet
- 
+    tl <- load.predictions$DM$tmin
+    tl.pc1 <- as.data.frame(rasterToPoints(tl$PC1))
+    names(tl.pc1) <- c("x","y", "PC1")
+    tl.pc2 <- as.data.frame(rasterToPoints(tl$PC2))
+    names(tl.pc2) <- c("x","y", "PC2")
+    tl.all <- inner_join(tl.pc1, tl.pc2)
+
+
+    ## # testing on original pca data, not predictions, for working out math:
+    test.load <- PCAs[["DM"]][["tmin"]]$loadings %>% dplyr::select(PC1, PC2, PC3)
+    test.scores <- PCAs[["DM"]][["tmin"]]$scores %>% dplyr::select(PC1, PC2, PC3)
+
+    # get matrices in correct dimensions
+    test.scores <- as.matrix(test.scores)
+    test.load <- t(as.matrix(test.load))
+
+    reproduce <- test.scores %*% test.load
+    reproduce <- data.frame(reproduce)
+    names(reproduce) <- PCAs[["DM"]][["tmin"]]$loadings$sensor
+    reproduce$datet <- PCAs[["DM"]][["tmin"]]$scores$datet
+
+    write.csv(reproduce, "../results/DM-TMIN-example-reconstruct.csv")
+}
+
+
+## OK main script here:
+
+#reconstructTemp("DM", "tmin")
+
