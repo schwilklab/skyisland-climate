@@ -42,9 +42,9 @@ for (mtn in c("CM", "DM", "GM")) {
         predictions[[a]] <- predict(bmod, hist_data)
       }
       score.predictions[[mtn]][[v]] <- data.frame(do.call(cbind, predictions))
-      score.predictions[[mtn]][[v]] <- hist_data$datet
+      score.predictions[[mtn]][[v]]$datet <- hist_data$datet
   }
   sink(NULL)
 }
 
-saveRDS(load.predictions, file.path(TEMPO_RES_DIR, "score_predictions.RDS"))
+saveRDS(score.predictions, file.path(TEMPO_RES_DIR, "score_predictions.RDS"))
