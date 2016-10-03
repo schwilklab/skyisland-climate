@@ -37,4 +37,3 @@ get_data <- function(dfile, time, func, ...) {
     }
     return(res)
 }
-

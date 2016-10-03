@@ -11,8 +11,6 @@
 # 4. use both predicitons to reconstruct predicted historical tmins and tmaxes
 # across the landscapes.
 
-source("./microclimate-topo-PCA.R") # provides PCAs object needed by both
-                                    # scripts sourced below.
 source("./predict-temporal.R") # provides scores.predicted
 source("./predict-spatial.R")  # provides load.predicted
 

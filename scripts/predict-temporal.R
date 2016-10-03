@@ -6,6 +6,7 @@
 ## reconstruct-climate.R for use.
 
 library(dplyr)
+library(MuMIn)
 
 TEMPO_RES_DIR <- "../results/tempo_mod_results/"
 
@@ -15,7 +16,7 @@ source("wx-data.R") # provides hist_wx_data data frame
 ## If running this on its own, you need to source the file below first, but in
 ## the main workflow, this is sourced from reconstruct-climate.R
 
-#source("./microclimate-topo-PCA.R") # provides PCAs object
+source("./microclimate-topo-PCA.R") # provides PCAs object
 
 PC_AXES <- c("PC1", "PC2", "PC3") #fit all three for now?
 
@@ -46,3 +47,4 @@ for (mtn in c("CM", "DM", "GM")) {
   sink(NULL)
 }
 
+saveRDS(load.predictions, file.path(TEMPO_RES_DIR, "score_predictions.RDS"))
