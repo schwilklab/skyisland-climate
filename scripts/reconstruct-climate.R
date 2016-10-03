@@ -12,6 +12,7 @@
 # across the landscapes.
 
 library(raster) # for rasterToPoints
+library(dplyr)
 
 #source("./predict-temporal.R") # provides scores.predicted
 #source("./predict-spatial.R")  # provides load.predicted
