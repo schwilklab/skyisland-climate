@@ -8,11 +8,18 @@
 
 # 3. Fit linear models to rpedict PCA scores (temporal component) from historical time series wx station data
 
-# 4. use both predicitons to reconstruct predicted historical tmins and tmaxes
+# 4. use both predictions to reconstruct predicted historical tmins and tmaxes
 # across the landscapes.
 
-source("./predict-temporal.R") # provides scores.predicted
-source("./predict-spatial.R")  # provides load.predicted
+library(raster) # for rasterToPoints
+
+#source("./predict-temporal.R") # provides scores.predicted
+#source("./predict-spatial.R")  # provides load.predicted
+
+# For hrothgar, get predicted loadings and scores:
+
+load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
+score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")
 
 rasterLayerToDF <- function(layer, name) {
   pl <-  as.data.frame(rasterToPoints(layer))
