@@ -17,7 +17,7 @@ IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","
 library(randomForest)
 library(sp)
 library(dplyr)
-library(GGally) # for ggpairs()
+#library(GGally) # for ggpairs()
 
 ## To make raster maps in ggplot quickly
 makeMap <- function(topolayer) {
