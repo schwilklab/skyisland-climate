@@ -11,6 +11,8 @@
 # 4. use both predicitons to reconstruct predicted historical tmins and tmaxes
 # across the landscapes.
 
+source("./microclimate-topo-PCA.R") # provides PCAs object needed by both
+                                    # scripts sourced below.
 source("./predict-temporal.R") # provides scores.predicted
 source("./predict-spatial.R")  # provides load.predicted
 
@@ -19,9 +21,6 @@ rasterLayerToDF <- function(layer, name) {
   names(pl) <- c("x","y", name)
   return(pl)
 }
-
-
-
 
 # hacky below. Sorry. Should not need to hard code pc axes names
 getLoadingsDF <- function(mtn, v) {
@@ -35,9 +34,6 @@ getLoadingsDF <- function(mtn, v) {
 
 
 ## transform predcted loadings and predicted scores back to tmin and tmax values
-
-## WON't work because 1) I need to deal with issue of equal number of pc axes 2
-## or 3? and 2) data is too big!
 
 # writes output to file
 reconstructTemp <- function(mtn, v) {
@@ -57,7 +53,7 @@ reconstructTemp <- function(mtn, v) {
 
 
 
-### Example on small dataset: sensor locaitons  only for the DM. This works and
+### Example on small dataset: sensor locaitons only for the DM. This works and
 ### gives numbers highly correlated witht he original values! Cool.
 runExamplePrediction <- function() {
 

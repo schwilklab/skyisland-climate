@@ -1,12 +1,21 @@
+# predict-temporal.R
 
+## Author: Dylan Schwilk
+
+## supplies score.predictions list accessed by mtn and variable. See
+## reconstruct-climate.R for use.
 
 library(dplyr)
-#library(MuMIn)
 
 TEMPO_RES_DIR <- "../results/tempo_mod_results/"
 
 source("wx-data.R") # provides hist_wx_data data frame
-source("./microclimate-topo-PCA.R")  # must be run at some point
+
+
+## If running this on its own, you need to source the file below first, but in
+## the main workflow, this is sourced from reconstruct-climate.R
+
+#source("./microclimate-topo-PCA.R") # provides PCAs object
 
 PC_AXES <- c("PC1", "PC2", "PC3") #fit all three for now?
 
