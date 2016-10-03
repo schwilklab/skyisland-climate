@@ -10,7 +10,7 @@
 #$ -cwd
 #$ -S /bin/bash
 #$ -P hrothgar
-#$ -pe fill 6
+#$ -pe fill 20
 #$ -q ivy-highmem
 
 R --vanilla < ~/projects/skyisland-climate/scripts/reconstruct-climate.R
