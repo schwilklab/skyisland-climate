@@ -4,11 +4,7 @@
 
 ## function read_historical_wx()
 ## Historical data read from dropbox. Data from NCCD in csv format daily
-## summaries. Export w_data to global namespace.
-
-
-## function read_projected_wx()
-## Read projected data
+## summaries. Exports dataframe `hist_wx_data` to global namespace.
 
 
 ###############################################################################
@@ -20,12 +16,8 @@ library(dplyr)
 hist_data_file <- "../data/sky-island-historical-wx-data.csv"
 hist_data_file_remote <- "https://www.dropbox.com/s/2nx1kuyuswhd984/sky-island-historical-wx-data.csv?raw=1"
 
-
-#hist_data_file <- "../wx-station-data/sky-island-historical-wx-data.csv"
-
 # Projected data location
 proj_data <- "~/science/projects/sky-island/projects/CSC-downscaled_projections"
-
 
 ###############################################################################
 
@@ -83,14 +75,18 @@ hist_wx_data <- getWXData()  %>%
          PRCP = PRCP * 25.4) 
 
 
-
-
 # date ranges
 
-hist_wx_data %>% filter(!is.na(TMIN) & !is.na(TMAX) & !is.na(PRCP)) %>% group_by(STATION_NAME) %>%
-  summarize(mindate = min(DATE), maxdate=max(DATE))
+#hist_wx_data %>% filter(!is.na(TMIN) & !is.na(TMAX) & !is.na(PRCP)) %>% group_by(STATION_NAME) %>%
+#  summarize(mindate = min(DATE), maxdate=max(DATE))
 
 stations <- read.csv("../microclimate/wx-stations.csv", stringsAsFactors=FALSE)
+
+# and theis file produces the following data frame
 hist_wx_data <- left_join(hist_wx_data, stations)
 
 #ggplot(hist_wx_data, aes(datet, TMIN)) + geom_line() + facet_grid( STATION_NAME ~ .)
+
+
+# clean up
+rm(stations, hist_data_file, hist_data_file_remote)
