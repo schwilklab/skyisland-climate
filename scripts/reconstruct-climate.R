@@ -30,7 +30,6 @@ getLoadingsDF <- function(mtn, v) {
   return(res)
 }
 
-
 ## transform predcted loadings and predicted scores back to tmin and tmax values
 
 # writes output to file
@@ -44,8 +43,8 @@ reconstructTemp <- function(mtn, v) {
   scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
   res <- scores_matrix %*% loadings_matrix
   res <- data.frame(res)
-  names(res) <- PCAs[[mtn]][[v]]$loadings$sensor
-  res$datet <- PCAs[[mtn]][[v]]$scores$datet
+  names(res) <- paste(ploadings$x, ploadings$y, sep="_")
+  res$datet <- pscores$datet
   filename <- paste("reconstruct", "_", mtn, "_", v, ".csv", sep="")
   write.csv(res, file.path("../results/", filename))
 }
