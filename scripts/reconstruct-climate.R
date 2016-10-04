@@ -13,6 +13,7 @@
 
 library(raster) # for rasterToPoints
 library(dplyr)
+library(parallel)
 
 #source("./predict-temporal.R") # provides scores.predicted
 #source("./predict-spatial.R")  # provides load.predicted
@@ -21,6 +22,19 @@ library(dplyr)
 
 load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
 score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")
+
+
+## parallel matrix multiplication
+matprod.par <- function(cl, A, B) {
+  if (ncol(A) != nrow(B)) stop("Matrices do not conform")
+  idx   <- splitIndices(nrow(A), length(cl))
+  Alist <- lapply(idx, function(ii) A[ii,,drop=FALSE])
+  ## ans   <- clusterApply(cl, Alist, function(aa, B) aa %*% B, B)
+  ## Same as above, but faster:
+  ans   <- clusterApply(cl, Alist, get("%*%"), B)
+  do.call(rbind, ans)
+}
+
 
 rasterLayerToDF <- function(layer, name) {
   pl <-  as.data.frame(rasterToPoints(layer))
@@ -38,25 +52,31 @@ getLoadingsDF <- function(mtn, v) {
   return(res)
 }
 
-## transform predcted loadings and predicted scores back to tmin and tmax values
-
-# writes output to file
-reconstructTemp <- function(mtn, v) {
+## transform predicted loadings and predicted scores back to tmin and tmax
+## values. Writes output to file with every x,y location as a column and date
+## as an additional column.
+reconstructTemp <- function(mtn, v, cl) {
   ploadings <- getLoadingsDF(mtn, v)
   pscores <- score.predictions[[mtn]][[v]]
   # two issues: different number of pc axes. Need to fix. AND can't do matrix
   # algebra on such big matrices. Solution?
 
+  print(paste("extracting data:", mtn, v))
   loadings_matrix <- t(as.matrix(dplyr::select(ploadings, -x, -y)))
   scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
-  res <- scores_matrix %*% loadings_matrix
+
+  print("Multiplying matrices")
+  #res <- scores_matrix %*% loadings_matrix
+  res <- matprod.par(cl, scores_matrix, loadings_matrix) # test
+
+  fname <- paste("reconstruct", "_", mtn, "_", v, ".csv", sep="")
+  print(paste("Creating dataframe and saving:", fname))
   res <- data.frame(res)
   names(res) <- paste(ploadings$x, ploadings$y, sep="_")
   res$datet <- pscores$datet
-  filename <- paste("reconstruct", "_", mtn, "_", v, ".csv", sep="")
-  write.csv(res, file.path("../results/", filename))
-}
 
+  write.csv(res, file=file.path("../results/", fname), row.names=FALSE)
+}
 
 
 ### Example on small dataset: sensor locaitons only for the DM. This works and
@@ -79,31 +99,32 @@ runExamplePrediction <- function() {
     test.scores <- as.matrix(test.scores)
     test.load <- t(as.matrix(test.load))
 
-    reproduce <- test.scores %*% test.load
+    #reproduce <- test.scores %*% test.load
+    matprod.par(cl, test.scores, test.load)
+
     reproduce <- data.frame(reproduce)
     names(reproduce) <- PCAs[["DM"]][["tmin"]]$loadings$sensor
     reproduce$datet <- PCAs[["DM"]][["tmin"]]$scores$datet
 
     write.csv(reproduce, "../results/DM-TMIN-example-reconstruct.csv")
-    return(NULL)
+    return(TRUE)
 }
 
 
 ## OK main script here:
 
 # wrapper takes vector with two strings, mtn and v:
-reconstructTempWrapper <- function(i) {
-    reconstructTemp(i[1], i[2])
+reconstructTempWrapper <- function(i, cl) {
+    reconstructTemp(i[1], i[2], cl)
 }
 
 
-
-library(parallel)
 no_cores <- detectCores()
 print(sprintf("%d cores detected", no_cores))
-
-cl <- makeCluster(no_cores, type="FORK")
+cl <- makeCluster(no_cores-1, type="FORK")
 
 params <- as.data.frame(t(expand.grid(c("CM", "DM", "GM"), c("tmin", "tmax"))))
-parLapply(cl, params, reconstructTempWrapper)
+
+# do for each parameter set in turn
+lapply(params, reconstructTempWrapper, cl=cl)
 stopCluster(cl)
