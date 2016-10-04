@@ -53,29 +53,34 @@ getLoadingsDF <- function(mtn, v) {
 }
 
 ## transform predicted loadings and predicted scores back to tmin and tmax
-## values. Writes output to file with every x,y location as a column and date
-## as an additional column.
-reconstructTemp <- function(mtn, v, cl) {
-  ploadings <- getLoadingsDF(mtn, v)
+## values. Writes output to file.
+reconstructTemp <- function(mtn, v, cl, chunk_size=1500) {
+  ploadings <- getLoadingsDF(mtn, v) #[1:1000,]
   pscores <- score.predictions[[mtn]][[v]]
   # two issues: different number of pc axes. Need to fix. AND can't do matrix
   # algebra on such big matrices. Solution?
 
   print(paste("extracting data:", mtn, v))
-  loadings_matrix <- t(as.matrix(dplyr::select(ploadings, -x, -y)))
-  scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
+  loadings_matrix <- as.matrix(dplyr::select(ploadings, -x, -y))
+  scores_matrix <- t(as.matrix(dplyr::select(pscores, -datet)))
 
-  print("Multiplying matrices")
-  #res <- scores_matrix %*% loadings_matrix
-  res <- matprod.par(cl, scores_matrix, loadings_matrix) # test
-
-  fname <- paste("reconstruct", "_", mtn, "_", v, ".csv", sep="")
-  print(paste("Creating dataframe and saving:", fname))
-  res <- data.frame(res)
-  names(res) <- paste(ploadings$x, ploadings$y, sep="_")
-  res$datet <- pscores$datet
-
-  write.csv(res, file=file.path("../results/", fname), row.names=FALSE)
+  nxy <- nrow(loadings_matrix)
+  
+  for(chunk in 1:(nxy %/% chunk_size)) {
+      start <- (chunk - 1)*chunk_size
+      end   <- min(start+chunk_size, nxy)
+      fname <- paste("reconstruct", "_", mtn, "_", v, "_", as.character(start),  ".csv", sep="")
+      print(paste("Multiplying matrices:", mtn, v, as.character(start)))
+      #res <- scores_matrix %*% loadings_matrix
+      # produces matrix with dates as columns and locations (lat,lon) as rows
+      res <- matprod.par(cl, loadings_matrix[start:end,], scores_matrix)
+      print(paste("Creating dataframe and saving:", fname))
+      res <- data.frame(res)
+      names(res) <- pscores$datet 
+      res$latlon <- paste(ploadings$x[start:end], ploadings$y[start:end], sep="_")
+      write.csv(res, file=file.path("../results/", fname), row.names=FALSE)
+  }
+  print(paste("finished:", mtn, v))
 }
 
 
@@ -126,5 +131,5 @@ cl <- makeCluster(no_cores-1, type="FORK")
 params <- as.data.frame(t(expand.grid(c("CM", "DM", "GM"), c("tmin", "tmax"))))
 
 # do for each parameter set in turn
-lapply(params, reconstructTempWrapper, cl=cl)
+lapply(params[1], reconstructTempWrapper, cl=cl)
 stopCluster(cl)
