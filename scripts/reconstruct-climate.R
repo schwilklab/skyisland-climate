@@ -69,7 +69,7 @@ reconstructTemp <- function(mtn, v, cl, chunk_size=1500) {
   for(chunk in 1:(nxy %/% chunk_size)) {
       start <- (chunk - 1)*chunk_size
       end   <- min(start+chunk_size, nxy)
-      fname <- paste("reconstruct", "_", mtn, "_", v, "_", as.character(start),  ".csv", sep="")
+      fname <- paste("reconstruct", "_", mtn, "_", v, "_", as.character(start),  ".RDS", sep="")
       print(paste("Multiplying matrices:", mtn, v, as.character(start)))
       #res <- scores_matrix %*% loadings_matrix
       # produces matrix with dates as columns and locations (lat,lon) as rows
@@ -78,7 +78,7 @@ reconstructTemp <- function(mtn, v, cl, chunk_size=1500) {
       res <- data.frame(res)
       names(res) <- pscores$datet 
       res$latlon <- paste(ploadings$x[start:end], ploadings$y[start:end], sep="_")
-      write.csv(res, file=file.path("../results/", fname), row.names=FALSE)
+      saveRDS(res, file=file.path("../results/", fname))
   }
   print(paste("finished:", mtn, v))
 }
@@ -131,5 +131,5 @@ cl <- makeCluster(no_cores-1, type="FORK")
 params <- as.data.frame(t(expand.grid(c("CM", "DM", "GM"), c("tmin", "tmax"))))
 
 # do for each parameter set in turn
-lapply(params[1], reconstructTempWrapper, cl=cl)
+lapply(params[1], reconstructTempWrapper, cl=cl) # just do first for now.
 stopCluster(cl)
