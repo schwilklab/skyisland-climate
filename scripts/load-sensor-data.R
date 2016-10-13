@@ -49,7 +49,7 @@ daily.summaries <- function(alltemps, humidity=FALSE){
     ## daily summaries:
     dailymin.df <- zoo2df(mintemps.daily,"tmin")
     dailymax.df <- zoo2df(maxtemps.daily,"tmax")
-    dailymean.df <- zoo2df(maxtemps.daily,"tmean")
+    dailymean.df <- zoo2df(meantemps.daily,"tmean")
     dtr.df <-  zoo2df(dtr,"dtr")
   
     return( Reduce(function(...) merge(..., all=T),
