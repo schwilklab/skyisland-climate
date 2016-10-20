@@ -76,8 +76,8 @@ getTempPCA <- function(df) {
     # first step is to get data in a wide format with once columns per sensor
     df.cast <- df %>% gather(variable, value, -datet, -sensor) %>%
         tidyr::spread(sensor, value)
-    tmin <- df.cast %>% filter(variable=="tmin") %>% select(-variable)
-    tmax <- df.cast %>% filter(variable=="tmax") %>% select(-variable)   
+    tmin <- df.cast %>% filter(variable=="tmin") %>% dplyr::select(-variable)
+    tmax <- df.cast %>% filter(variable=="tmax") %>% dplyr::select(-variable)
     tmin.PCA <- runPCA(tmin)
     tmax.PCA <- runPCA(tmax)
     return(list(tmin=tmin.PCA, tmax=tmax.PCA))
