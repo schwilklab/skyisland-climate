@@ -177,10 +177,21 @@ thawmins <- function(x, dt) {
 ##  dd <- subset(thawrates.DM,sensor=="MI007") # & thawmin > 15)
 ## quantile(dd$thawmin, c(0.0001, 0.05,0.1,0.2,0.25), na.rm=TRUE)
 
+## Show daily series by sensor
+filter(temp.daily.sum, mtn=="CM") %>%
+ggplot(aes(datet, tmin)) + geom_line() + facet_wrap(~sensor)
+
+
+filter(temp.daily.sum, mtn=="DM") %>%
+ggplot(aes(datet, tmin)) + geom_line() + facet_wrap(~sensor)
+
+filter(temp.daily.sum, mtn=="GM") %>%
+ggplot(aes(datet, tmin)) + geom_line() + facet_wrap(~sensor)
+
 
 # test ind sensors
 
-ggplot(data = subset(temp.daily.sum, sensor == "GP612" & as.POSIXct(datet) > mdy("01-01-2014")), aes(datet, max)) + geom_line()
+ggplot(data = subset(temp.daily.sum, sensor == "GP612" & datet > mdy("01-01-2014")), aes(datet, max)) + geom_line()
 
 
 diff <- merge(subset(temp.daily.sum, sensor == "GP612"), subset(temp.daily.sum, sensor == "GP610"), by = "datet")
