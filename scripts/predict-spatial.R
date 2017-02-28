@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript 
 ## predict-spatial.R
 ## Authors: Helen Poulos and Dylan Schwilk
 
@@ -22,7 +23,7 @@ IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","
 library(caret)
 library(sp)
 library(dplyr)
-library(xgboost)
+#library(xgboost) # not used?
 
 DO_PAIR_PLOTS <- FALSE
 if (require (GGally) ) DO_PAIR_PLOTS <- TRUE # for ggpairs() # may not be
@@ -93,10 +94,14 @@ fitRandomForest <- function(df, dep.var) {
     
 
 }
-# for some reason the print out gives an Rsquared of 1 for each model produced, but if you 
-# specify this print(model) it gives real Rsquared numbers. Not sure where to 
-# stick this into the function above I tried to put it beore the bracket, but that did nothing
-# I also specified centering and scaling for pre-processing but the print(model) command lists "no pre-processing"
+
+
+## comment from @hpoulos:
+# for some reason the print out gives an Rsquared of 1 for each model produced,
+# but if you specify this print(model) it gives real Rsquared numbers. Not sure
+# where to stick this into the function above I tried to put it beore the
+# bracket, but that did nothing I also specified centering and scaling for
+# pre-processing but the print(model) command lists "no pre-processing"
 
 #Fit a boosted regression tree model
 fitboost <- function(df, dep.var) {
@@ -104,20 +109,33 @@ fitboost <- function(df, dep.var) {
   formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
   xgmodel <- train(formula, data = df, tuneLength = 10,
                  method = "xgbTree",
-                 trControl = trainControl(method = "cv", number = 5,  preProc = c("center", "scale"), verboseIter = TRUE))
+                 trControl = trainControl(method = "cv", number = 5,
+                                          preProc = c("center", "scale"),
+                                          verboseIter = FALSE))
   return(xgmodel)
   
-  
-}
+  }
 
 
 fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
   # split and redirect output
   print(paste(mtn, dep.var, axis))
   mod <- fitboost(PCAs[[mtn]][[dep.var]]$loadings, axis)
-  print(mod)
+  # save the model object:
+  saveRDS(mod, file.path(TOPO_RES_DIR, paste(mtn, "_", v, "_", axis, ".RDS", sep="")))
+  # then print some summary output:
+
+  print("mod$resample")
+  print(mod$resample)
+  
   png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
+  plot(mod) # this produces RMSE by subsample by tree depth plots
   dev.off()
+
+  ## for rf models:
+  ## png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
+  ## Any useful mode diagnostic plots?
+  ## dev.off()
   res <- raster::predict(topostacks[[mtn]], mod)
   return(res)
 }
@@ -143,13 +161,16 @@ for (mtn in c("CM", "DM", "GM")) {
 #compare fits between rf output and boosted regrresession tree
 #can't get this to work. Says that object 'xgmodel' not found
 
-results <- resamples(list(xgboost=res, RF=model))
-# summarize the distributions
-summary(results)
-# boxplots of results
-bwplot(results)
-# dot plots of results
-dotplot(results)
+## DWS: code below refers to non existent objects. Looks like objects taht were
+## created in some one-off code somewhere else?
+
+## results <- resamples(list(xgboost=res, RF=model))
+## # summarize the distributions
+## summary(results)
+## # boxplots of results
+## bwplot(results)
+## # dot plots of results
+## dotplot(results)
 
 ## Provides load.predictions
 
