@@ -158,7 +158,7 @@ for (mtn in c("CM", "DM", "GM")) {
   sink(NULL)
 }
 
-#compare fits between rf output and boosted regrresession tree
+#compare fits between rf output and boosted regresession tree
 #can't get this to work. Says that object 'xgmodel' not found
 
 ## DWS: code below refers to non existent objects. Looks like objects taht were

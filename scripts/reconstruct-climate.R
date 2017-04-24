@@ -6,23 +6,28 @@
 # 2. Fit random forest models to spatial components ("loadings") and
 # predict these axes across the full spatial extent in each mtn range.
 
-# 3. Fit linear models to rpedict PCA scores (temporal component) from historical time series wx station data
+# 3. Fit linear models to rpedict PCA scores (temporal component) from
+# historical time series wx station data
 
 # 4. use both predictions to reconstruct predicted historical tmins and tmaxes
-# across the landscapes.
+# across the landscapes. Then summarize these by year to save space.
+
+# Run the model fitting below at least once:
 
 #source("./predict-temporal.R") # provides scores.predicted
 #source("./predict-spatial.R")  # provides load.predicted
 
-# For hrothgar, get predicted loadings and scores:
+# The results are in load.predictions and score.predictions. Tese objects are
+# saved as rds files which can be loaded:
+load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
+score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")
+
 
 library(tibble)
 library(dismo) # for biovars()
 library(dplyr)
 library(lubridate)
 
-load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
-score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")
 
 
 rasterLayerToDF <- function(layer, name) {
@@ -174,8 +179,10 @@ reconstructTemp <- function(mtn) {
 }
 
 
-### Example on small dataset: sensor locaitons only for the DM. This works and
-### gives numbers highly correlated witht he original values! Cool.
+### Example using full tmin tmax time series and not summarizing to annual
+### bioclim variables: Example on small dataset: sensor locations only for the
+### DM. This works and gives numbers highly correlated witht he original
+### values! Cool.
 runExamplePrediction <- function() {
 
     tl <- load.predictions$DM$tmin
@@ -205,5 +212,11 @@ runExamplePrediction <- function() {
 
 ## OK main script here:
 
-res <- reconstructTemp("DM")
+CM_hist_climate <- reconstructTemp("CM")
+DM_hist_climate <- reconstructTemp("DM")
+GM_hist_climate <- reconstructTemp("GM")
 
+# save these results:
+write.csv(CM_hist_climate, "../results/reconstruct_CM.csv", row.names=FALSE)
+write.csv(DM_hist_climate, "../results/reconstruct_DM.csv", row.names=FALSE)
+write.csv(GM_hist_climate, "../results/reconstruct_GM.csv", row.names=FALSE)
