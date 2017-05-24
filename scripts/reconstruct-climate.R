@@ -17,7 +17,7 @@
 #source("./predict-temporal.R") # provides scores.predicted
 #source("./predict-spatial.R")  # provides load.predicted
 
-# The results are in load.predictions and score.predictions. Tese objects are
+# The results are in load.predictions and score.predictions. These objects are
 # saved as rds files which can be loaded:
 load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
 score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")

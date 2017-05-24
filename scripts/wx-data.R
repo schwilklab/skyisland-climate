@@ -47,8 +47,10 @@ read_proj_wx <- function(d=proj_data_dir) {
   wxd$var[wxd$var=="tasmin"] <- "tmin"
   wxd$var[wxd$var=="pr"] <- "prcp"
 
-  # and spread the data so we have three value columns
+  # spread the data so we have three value columns
   wxd <- spread(wxd, var, value)
+  # get dates
+  wxd <- mutate(wxd, datet=as.Date(paste(year, month, day, sep="-")))
   return(wxd)
 }
 
