@@ -80,14 +80,14 @@ predict_temporal_scores <- function(wx_data, mtn, var) {
 
 ## Historical
 ## result stored in hist_score_predictions
+hist_score_predictions <- list()
 for (mtn in mtns) {
   hist_score_predictions[[mtn]] = list()
   wxd <- filter(hist_wx_data,
                 mtn==mtn &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
   for (v in c("tmin", "tmax")) {
     print(paste(mtn, "_", v, ".txt", sep=""))
-    thedf <- PCAs[[mtn]][[v]]$scores %>% inner_join(wxd)
-    hist_score_predictions[[mtn]][[v]] <- predict_temporal_scores(thedf, mtn, v)
+    hist_score_predictions[[mtn]][[v]] <- predict_temporal_scores(wxd, mtn, v)
   }
 }
 
@@ -107,8 +107,7 @@ for(gcm in unique(proj_wx_data$gcm)) {
                       mtn==mtn &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
       for (v in c("tmin", "tmax")) {
         print(paste(gcm, scenario, mtn, v))
-        thedf <- PCAs[[mtn]][[v]]$scores %>% inner_join(wxd)
-        proj_score_predictions[[gcm]][[scenario]][[mtn]][[v]] <- predict_temporal_scores(thedf, mtn, v)
+        proj_score_predictions[[gcm]][[scenario]][[mtn]][[v]] <- predict_temporal_scores(wxd, mtn, v)
       }
     }
   }
