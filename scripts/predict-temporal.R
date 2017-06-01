@@ -10,7 +10,7 @@ library(MuMIn)
 
 TEMPO_RES_DIR <- "../results/tempo_mod_results/"
 
-source("wx-data.R") # provides hist_wx_data data frame
+source("wx-data.R") # provides hist_wx_data and proj_wx_data lists
 
 
 ## If running this on its own, you need to source the file below first, but in
@@ -107,20 +107,17 @@ for(gcm in unique(proj_wx_data$gcm)) {
                       mtn==mtn &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
       for (v in c("tmin", "tmax")) {
         print(paste(gcm, scenario, mtn, v))
-        proj_score_predictions[[gcm]][[scenario]][[mtn]][[v]] <- predict_temporal_scores(wxd, mtn, v)
+        fname <- file.path(TEMPO_RES_DIR,
+                           paste("proj_score_predictions", gcm, scenario, mtn, v, sep="_"))
+        fname <- paste(fname, "RDS", sep=".")
+        print("Saving to ")
+        print(fname)
+        pred <- predict_temporal_scores(wxd, mtn, v)
+        saveRDS(pred, fname)
       }
     }
   }
 }
 
-saveRDS(proj_score_predictions, file.path(TEMPO_RES_DIR, "proj_score_predictions.RDS"))
 
-# eg:
-## > head(proj_score_predictions[["HadGEM2-CC.r1i1p1"]][["rcp45"]]$CM$tmin)
-##         PC1      PC2      PC3      datet
-## 1 -65.17843 3.480066 3.440567 2011-05-14
-## 2 -56.37765 3.451698 3.360633 2011-05-14
-## 3 -42.81894 5.325342 3.377153 2011-05-14
-## 4 -61.79173 3.975548 3.446696 2011-05-14
-## 5 -60.27887 3.898987 3.417984 2011-05-14
-## 6 -63.69950 2.637646 3.280226 2011-05-14
+

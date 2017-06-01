@@ -19,16 +19,12 @@
 
 # The results are in load.predictions and score.predictions. These objects are
 # saved as rds files which can be loaded:
-load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
-score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")
 
 
 library(tibble)
-library(dismo) # for biovars()
+#library(dismo) # for biovars()
 library(dplyr)
 library(lubridate)
-
-
 
 rasterLayerToDF <- function(layer, name) {
   pl <-  as.data.frame(rasterToPoints(layer))
@@ -36,7 +32,19 @@ rasterLayerToDF <- function(layer, name) {
   return(pl)
 }
 
-# hacky below. Sorry. Should not need to hard code pc axes names
+proj_score_predictions_CNRM-CM5.r1i1p1_rcp45_GM_tmax
+## functions to retireve PCA loadings (spatial) and scores(temporal)
+
+## Read necessary data (except gcm prediciotns which we only read as necessary)
+# spatial:
+TEMPO_RES_DIR <- "../results/tempo_mod_results/"
+load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
+# temporal predictions:
+# historical...
+hist_score_predictions <- readRDS("../results/tempo_mod_results/hist_score_predictions.RDS")
+# and future projected:
+
+# Retrieve PCA loadings by mtn and variable
 getLoadingsDF <- function(mtn, v) {
   ploadings <- load.predictions[[mtn]][[v]]
   pc1 <- rasterLayerToDF(ploadings[["PC1"]], "PC1")
@@ -45,6 +53,28 @@ getLoadingsDF <- function(mtn, v) {
   res <- inner_join(inner_join(pc1, pc2),pc3)
   return(res)
 }
+
+# Retrieve PCA score predictions saved as RDS files by
+# predict_temporal.R
+get_score_prediction_series <- function(mtn, var, gcm=NULL, scenario=NULL) {
+  if (is.null(gcm)) { # assume we want historic scores
+    res <- hist_score_predictions[[mtn]][[var]] # already read from file
+  }
+  else { # read appropriate file
+    fname <- fname <- file.path(TEMPO_RES_DIR,
+                           paste("proj_score_predictions", gcm, scenario, mtn, var, sep="_"))
+        fname <- paste(fname, "RDS", sep=".")
+    res <- readRDS(fname)
+  }
+  return(res)
+}
+
+  
+
+
+
+## TODO
+
 
 # bioclim annual summaries
 ## http://www.worldclim.org/bioclim
@@ -131,19 +161,20 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
 # writes output to file. Loadings are PC axes for topgraphy, scores as PC axes
 # for daily temperature values. Function expects daily scores but in full year
 # chunks.
-reconstructTemp <- function(mtn) {
+reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
   tmin_loadings <- getLoadingsDF(mtn, "tmin")
   tmax_loadings <- getLoadingsDF(mtn, "tmax")
 
-  ## temporary: subsample landscape for testing purposes
+  ### TESTING !!!!!
+  #temporary: subsample landscape for testing purposes
   srows <- sample(1:nrow(tmin_loadings), 1000)
   tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
   tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
   ## end testing code
 
   
-  tmin_scores <- score.predictions[[mtn]][["tmin"]]
-  tmax_scores <- score.predictions[[mtn]][["tmax"]]
+  ## tmin_scores <- score.predictions[[mtn]][["tmin"]]
+  ## tmax_scores <- score.predictions[[mtn]][["tmax"]]
 
   # convert loadings to matrices now and once:
   tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings, -x, -y)))
@@ -212,7 +243,11 @@ runExamplePrediction <- function() {
 
 ## OK main script here:
 
-CM_hist_climate <- reconstructTemp("CM")
+CM_hist_climate <- reconstructTemp("CM",
+                                   hist_score_predictions[["CM"]][["tmin"]],
+                                   hist_score_predictions[["CM"]][["tmax"]])
+
+
 DM_hist_climate <- reconstructTemp("DM")
 GM_hist_climate <- reconstructTemp("GM")
 
