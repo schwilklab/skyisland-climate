@@ -41,33 +41,33 @@ OUTPUT <- "../decagon/merged"
 BGN.1 <- read.csv(file.path(RAW_DATA, "soil-BGN-120524.csv"),
                   stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
 names(BGN.1) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
-BGN.1$time <- mdy_hm(BGN.1$time, tz = "CST")
+BGN.1$time <- mdy_hm(BGN.1$time, tz = "CST6CDT")
 
 
 BGN.2 <- read.csv(file.path(RAW_DATA, "soil-BGN-120824.csv"),
                   stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
 names(BGN.2) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
-BGN.2$time <- dmy_hm(BGN.2$time, tz = "CST")
+BGN.2$time <- dmy_hm(BGN.2$time, tz = "CST6CDT")
 
 BGN.3 <- read.csv(file.path(RAW_DATA, "soil-BGN-130524.csv"),
                   stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
 names(BGN.3) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
-BGN.3$time <- mdy_hm(BGN.3$time, tz = "CST")
+BGN.3$time <- mdy_hm(BGN.3$time, tz = "CST6CDT")
 
 BGN.4 <- read.csv(file.path(RAW_DATA, "soil-BGN-130625.csv"),
                   stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
 names(BGN.4) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
-BGN.4$time <- mdy_hm(BGN.4$time, tz = "CST")
+BGN.4$time <- mdy_hm(BGN.4$time, tz = "CST6CDT")
 
 BGN.5 <- read.csv(file.path(RAW_DATA, "soil-BGN-140405.csv"),
                   stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
 names(BGN.5) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
-BGN.5$time <- mdy_hm(BGN.5$time, tz = "CST")
+BGN.5$time <- mdy_hm(BGN.5$time, tz = "CST6CDT")
 
 BGN.6 <- read.csv(file.path(RAW_DATA, "soil-BGN-140719.csv"),
                   stringsAsFactors = FALSE, na.strings = c("NA", "#N/A", ""))[,c(1:5)]
 names(BGN.6) <- c("time", "p1_psi", "p2_VWC", "p3_VWC", "p4_psi")
-BGN.6$time <- mdy_hm(BGN.6$time, tz = "CST")
+BGN.6$time <- mdy_hm(BGN.6$time, tz = "CST6CDT")
 
 BGN <- rbind(BGN.1,BGN.2, BGN.3, BGN.4, BGN.5, BGN.6)
 write.csv(BGN, file.path(OUTPUT, "soil-BGN-all.csv"), row.names=FALSE)

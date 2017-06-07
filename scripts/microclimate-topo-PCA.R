@@ -53,8 +53,8 @@ dec2jan <- function(m){
 
 lengthNotNA <- plyr::colwise(function(x) { sum( ! is.na(x))})
 
-# function to run PCA on iBUtton sensor (temperature) data
-runPCA <- function(wdata, minlength=1000, nPC = 5) {
+# function to run PCA on iButton sensor (temperature) data
+runPCA <- function(wdata, minlength=1100, nPC = 3) {
    # Throw out sensors with less than minlength values. 1000 works for full
    # data set. But this should be adjusted to keep missing data at <= 10% for
    # ppca method. TODO
@@ -62,7 +62,7 @@ runPCA <- function(wdata, minlength=1000, nPC = 5) {
    # Throw out rows in which all elements are NA:
    df <- df[rowSums(is.na(df[,-1])) != ncol(df[,-1]),]
    ## Run PCA
-   df.PCA <- pca(df[,-1], nPcs=nPC, method="ppca", center=FALSE)
+  df.PCA <- pca(df[,-1], nPcs=nPC, method="ppca", center=FALSE, maxIterations=4000)
    # merge scores back with dates to run time series analysis:
    scores <- cbind(data.frame(datet=df$datet), as.data.frame(scores(df.PCA)))
    loadings <- as.data.frame(loadings(df.PCA))
@@ -76,8 +76,8 @@ getTempPCA <- function(df) {
     # first step is to get data in a wide format with once columns per sensor
     df.cast <- df %>% gather(variable, value, -datet, -sensor) %>%
         tidyr::spread(sensor, value)
-    tmin <- df.cast %>% filter(variable=="tmin") %>% select(-variable)
-    tmax <- df.cast %>% filter(variable=="tmax") %>% select(-variable)   
+    tmin <- df.cast %>% filter(variable=="tmin") %>% dplyr::select(-variable)
+    tmax <- df.cast %>% filter(variable=="tmax") %>% dplyr::select(-variable)
     tmin.PCA <- runPCA(tmin)
     tmax.PCA <- runPCA(tmax)
     return(list(tmin=tmin.PCA, tmax=tmax.PCA))

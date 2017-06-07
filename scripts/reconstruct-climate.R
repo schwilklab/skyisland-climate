@@ -1,3 +1,18 @@
+#!/usr/bin/env Rscript
+
+## Note: this is a command-line script so that it can be called from bash
+## scripts on the supercomputer cluster and run the indepent cliamte
+## reconstrucitons in parallel
+
+
+# example call:
+# ./reconstruct-climate.R CM CCSM4.r6i1p1 rcp45
+
+# will run reconstruction for the Chisos ("CM") the CCSM4.r6i1p GCM and
+# scenario rp45
+
+
+
 ## Steering code to
 
 # 1. Run PCAs to split iBUtton tmin and tmax records into spatial and temporal
@@ -6,23 +21,30 @@
 # 2. Fit random forest models to spatial components ("loadings") and
 # predict these axes across the full spatial extent in each mtn range.
 
-# 3. Fit linear models to rpedict PCA scores (temporal component) from historical time series wx station data
+# 3. Fit linear models to rpedict PCA scores (temporal component) from
+# historical time series wx station data
 
 # 4. use both predictions to reconstruct predicted historical tmins and tmaxes
-# across the landscapes.
+# across the landscapes. Then summarize these by year to save space.
 
-library(raster) # for rasterToPoints
+# Run the model fitting below at least once:
+
+# source("./predict-temporal.R") # provides scores.predicted
+# source("./predict-spatial.R")  # provides load.predicted
+
+# The results are in load.predictions and score.predictions. These objects are
+# saved as rds files which the code below reads as necessary
+
+#
+
+library(tibble)
 library(dplyr)
+library(lubridate)
+
+# I'm leaving this aprallel implimentation of matrix multiplication for now but
+# the code does not use it and we mostly use horthgar right now for 1) big
+# memory) and 2) trivial parallelization across gcms and scenarios
 library(parallel)
-
-#source("./predict-temporal.R") # provides scores.predicted
-#source("./predict-spatial.R")  # provides load.predicted
-
-# For hrothgar, get predicted loadings and scores:
-
-load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
-score.predictions <- readRDS("../results/tempo_mod_results/score_predictions.RDS")
-
 
 ## parallel matrix multiplication
 matprod.par <- function(cl, A, B) {
@@ -35,14 +57,23 @@ matprod.par <- function(cl, A, B) {
   do.call(rbind, ans)
 }
 
+# todo: might need to move if results are large:
+OUT_DIR <- "../results/reconstructions"
 
 rasterLayerToDF <- function(layer, name) {
-  pl <-  as.data.frame(rasterToPoints(layer))
+  pl <-  as.data.frame(raster::rasterToPoints(layer))
   names(pl) <- c("x","y", name)
   return(pl)
 }
 
-# hacky below. Sorry. Should not need to hard code pc axes names
+## functions to retrieve PCA loadings (spatial) and scores(temporal)
+
+## Read necessary data (except gcm predictions which we only read as necessary)
+# spatial:
+TEMPO_RES_DIR <- "../results/tempo_mod_results/"
+load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
+
+# Fxn to retrieve PCA loadings by mtn and variable
 getLoadingsDF <- function(mtn, v) {
   ploadings <- load.predictions[[mtn]][[v]]
   pc1 <- rasterLayerToDF(ploadings[["PC1"]], "PC1")
@@ -52,41 +83,34 @@ getLoadingsDF <- function(mtn, v) {
   return(res)
 }
 
-## transform predicted loadings and predicted scores back to tmin and tmax
-## values. Writes output to file.
-reconstructTemp <- function(mtn, v, cl, chunk_size=1500) {
-  ploadings <- getLoadingsDF(mtn, v) #[1:1000,]
-  pscores <- score.predictions[[mtn]][[v]]
-  # two issues: different number of pc axes. Need to fix. AND can't do matrix
-  # algebra on such big matrices. Solution?
 
-  print(paste("extracting data:", mtn, v))
-  loadings_matrix <- as.matrix(dplyr::select(ploadings, -x, -y))
-  scores_matrix <- t(as.matrix(dplyr::select(pscores, -datet)))
+# temporal predictions:
+# historical:
+hist_score_predictions <- readRDS("../results/tempo_mod_results/hist_score_predictions.RDS")
 
-  nxy <- nrow(loadings_matrix)
-  
-  for(chunk in 1:(nxy %/% chunk_size)) {
-      start <- (chunk - 1)*chunk_size
-      end   <- min(start+chunk_size, nxy)
-      fname <- paste("reconstruct", "_", mtn, "_", v, "_", as.character(start),  ".RDS", sep="")
-      print(paste("Multiplying matrices:", mtn, v, as.character(start)))
-      #res <- scores_matrix %*% loadings_matrix
-      # produces matrix with dates as columns and locations (lat,lon) as rows
-      res <- matprod.par(cl, loadings_matrix[start:end,], scores_matrix)
-      print(paste("Creating dataframe and saving:", fname))
-      res <- data.frame(res)
-      names(res) <- pscores$datet 
-      res$latlon <- paste(ploadings$x[start:end], ploadings$y[start:end], sep="_")
-      saveRDS(res, file=file.path("../results/", fname))
+# ... and future projected:
+## Fxn to retrieve predicted PCA scores (temporal component). If gcm or scnario
+## are NULL, the fxn returns the historical PCA time series for that range.
+getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
+  if (is.null(gcm)) { # assume we want historic scores
+    res <- hist_score_predictions[[mtn]][[var]] # already read from file
   }
-  print(paste("finished:", mtn, v))
+  else { # read appropriate file
+    fname <- fname <- file.path(TEMPO_RES_DIR,
+                           paste("proj_score_predictions", gcm, scenario, mtn, var, sep="_"))
+        fname <- paste(fname, "RDS", sep=".")
+    res <- readRDS(fname)
+  }
+  return(res)
 }
 
-
-### Example on small dataset: sensor locaitons only for the DM. This works and
-### gives numbers highly correlated witht he original values! Cool.
-runExamplePrediction <- function() {
+  
+### Example using full tmin tmax time series and not summarizing to annual
+### bioclim variables: Example on small dataset: sensor locations only for the
+### DM. This works and gives numbers highly correlated witht he original
+### values! Cool. This gives an example of daily prediction values and is just
+### a toy.
+testRunExamplePrediction <- function() {
 
     tl <- load.predictions$DM$tmin
     tl.pc1 <- as.data.frame(rasterToPoints(tl$PC1))
@@ -116,20 +140,172 @@ runExamplePrediction <- function() {
 }
 
 
-## OK main script here:
+# bioclim annual summaries
+## http://www.worldclim.org/bioclim
 
-# wrapper takes vector with two strings, mtn and v:
-reconstructTempWrapper <- function(i, cl) {
-    reconstructTemp(i[1], i[2], cl)
+## BIO1 = Annual Mean Temperature
+## BIO2 = Mean Diurnal Range (Mean of monthly (max temp - min temp))
+## BIO3 = Isothermality (BIO2/BIO7) (* 100)
+## BIO4 = Temperature Seasonality (standard deviation *100)
+## BIO5 = Max Temperature of Warmest Month
+## BIO6 = Min Temperature of Coldest Month
+## BIO7 = Temperature Annual Range (BIO5-BIO6)
+## BIO8 = Mean Temperature of Wettest Quarter
+## BIO9 = Mean Temperature of Driest Quarter
+## BIO10 = Mean Temperature of Warmest Quarter
+## BIO11 = Mean Temperature of Coldest Quarter
+
+
+# expects 1 year of data as two daily time series: tmin and tmax
+bioclim <- function(datet, tmin, tmax) {
+  
+  if (length(datet) < 300) {
+    return(data.frame(BIO1=NA,
+                      BIO2=NA,
+                      BIO4=NA,
+                      BIO5=NA,
+                      BIO6=NA,
+                      BIO7=NA,
+                      BIO3=NA,
+                      BIO10=NA,
+                      BIO11=NA,
+                      year=NA))
+  }
+  
+  monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, month=month(datet)) %>%
+    group_by(month) %>%
+    dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
+              tmean=mean( (tmax+tmin)/2, na.rm=TRUE))
+
+  monthlies <- monthlies %>%
+    mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA))
+
+  d <- list()
+  d$BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
+  d$BIO2 <- mean(tmax - tmin, na.rm=TRUE)
+  d$BIO4 <- sd(monthlies$tmean) * 100
+  d$BIO5 <- max(monthlies$tmax)
+  d$BIO6 <- min(monthlies$tmin)
+  d$BIO7 <- d$BIO5-d$BIO6
+  d$BIO3 <- (d$BIO2/d$BIO7) * 100
+
+  d$BIO10 <- max(monthlies$qtmean, na.rm=TRUE)
+  d$BIO11 <- min(monthlies$qtmean, na.rm=TRUE)
+
+  d <- as_data_frame(d)
+  d$year <- year(datet[1])
+  return(d)
 }
 
 
-no_cores <- detectCores()
-print(sprintf("%d cores detected", no_cores))
-cl <- makeCluster(no_cores-1, type="FORK")
+# one year reconstruct and summarize
+summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
+  
+  ## tmins <- predict_monthly(tmin_scores, tmin_lmat)
+  ## tmaxs <- predict_monthly(tmax_scores, tmax_lmat)
+ 
+  tmax_smat <- as.matrix(dplyr::select(tmax_scores, -datet))      
+  tmaxs <- tmax_smat %*% tmax_lmat
 
-params <- as.data.frame(t(expand.grid(c("CM", "DM", "GM"), c("tmin", "tmax"))))
+  tmin_smat <- as.matrix(dplyr::select(tmin_scores, -datet))
+  tmins <- tmin_smat %*% tmin_lmat
 
-# do for each parameter set in turn
-lapply(params[1], reconstructTempWrapper, cl=cl) # just do first for now.
-stopCluster(cl)
+  ndates <- dim(tmins)[1]
+  ncoords <- dim(tmins)[2]
+
+  res <- vector(mode="list", length=ncoords)
+  for (i in 1:ncoords) {
+    res[[i]] <- bioclim(tmin_scores$datet, tmins[,i], tmaxs[,i])
+  }
+
+  return(bind_rows(res))
+}
+
+
+
+## transform predicted loadings and predicted scores back to tmin and tmax values
+# writes output to file. Loadings are PC axes for topgraphy, scores as PC axes
+# for daily temperature values. Function expects daily scores but in full year
+# chunks.
+reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
+  tmin_loadings <- getLoadingsDF(mtn, "tmin")
+  tmax_loadings <- getLoadingsDF(mtn, "tmax")
+
+  ### TESTING !!!!!
+  #temporary: subsample landscape for testing purposes
+ srows <- sample(1:nrow(tmin_loadings), 1000)
+ tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
+ tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
+  ## end testing code
+
+  # convert loadings to matrices now and once:
+  tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings, -x, -y)))
+  tmax_lmat <- t(as.matrix(dplyr::select(tmax_loadings, -x, -y)))
+  
+  # but do scores one year at a time
+#  tmin_scores <- tmin_scores %>% group_by(year = year(datet))
+#  tmax_scores <- tmax_scores %>% group_by(year = year(datet))
+
+
+  years <- unique(year(tmin_scores$datet))
+
+  res <- vector(mode="list", length=length(years))
+  for (i in seq_along(years)) {
+    print(years[i])
+#    if(years[i]==1912) browser()
+    tminsc <- filter(tmin_scores, year(datet)==years[i])
+    tmaxsc <- filter(tmax_scores, year(datet)==years[i])
+    res[[i]] <- summarizeOneYear(tminsc, tmaxsc, tmin_lmat, tmax_lmat)
+    res[[i]] <- mutate(res[[i]], x=tmin_loadings$x, y=tmin_loadings$y)
+  }
+  res <- bind_rows(res)
+  
+  ## scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
+
+  ## res <- scores_matrix %*% loadings_matrix
+  ## res <- data.frame(res)
+  ## names(res) <- paste(ploadings$x, ploadings$y, sep="_")
+  ## res$datet <- pscores$datet
+  filename <- paste("reconstruct", "_", mtn, ".csv", sep="")
+  write.csv(res, file.path("../results/", filename))
+   return(res)
+}
+
+
+## OK main script here:
+
+# run from command line. Expects, mtn, gcm, scenario. If only one argument is
+# passed, it will conduct the historicalr econstruction for that mtn range.
+args <- commandArgs(trailingOnly=TRUE)
+
+# test data for running interactively:
+# args <- "CM"
+
+# test if there is at least one argument: if not, return an error
+if (length(args)==0) {
+  stop("At least one argument must be supplied (input file).\n", call.=FALSE)
+}
+
+mtn <- args[1]
+if (length(args)==1) {
+  # historical
+  print("Reconstructing historic climate series")
+  gcm <- NULL
+  scenario <- NULL
+} else {
+  gcm <- args[2]
+  scenario <- args[3]
+}
+
+# now run the reconstruction
+oname <-  paste(mtn, gcm, scenario, sep="_")
+print(oname)
+res <- reconstructTemp(mtn,
+                       getScorePredictionSeries( mtn, "tmin", gcm, scenario),
+                       getScorePredictionSeries( mtn, "tmax", gcm, scenario))
+
+
+# save:
+ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
+print(paste("Saving:", ofile))
+saveRDS(res, ofile)

@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript 
 ## predict-spatial.R
 ## Authors: Helen Poulos and Dylan Schwilk
 
@@ -17,11 +18,13 @@ set.seed(RSEED)
 source("./microclimate-topo-PCA.R") # provides PCAs object
 
 TOPO_RES_DIR <- "../results/topo_mod_results/"
-IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope")
 
-library(randomForest)
+IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relelev_l", "slope")
+
+library(caret)
 library(sp)
 library(dplyr)
+#library(xgboost) # not used?
 
 DO_PAIR_PLOTS <- FALSE
 if (require (GGally) ) DO_PAIR_PLOTS <- TRUE # for ggpairs() # may not be
@@ -85,20 +88,55 @@ checkCorrelations <- function(mtn, var) {
 fitRandomForest <- function(df, dep.var) {
     ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
-    model <- randomForest(formula, data = df,
-                          importance=TRUE, keep.forest=TRUE)
+    model <- train(formula, data = df, tuneLength = 10,
+      method = "rf",
+      trControl = trainControl(method = "cv", number = 10,  preProc = c("center", "scale"), verboseIter = TRUE))
     return(model)
+    
+
 }
+
+
+## comment from @hpoulos:
+# for some reason the print out gives an Rsquared of 1 for each model produced,
+# but if you specify this print(model) it gives real Rsquared numbers. Not sure
+# where to stick this into the function above I tried to put it beore the
+# bracket, but that did nothing I also specified centering and scaling for
+# pre-processing but the print(model) command lists "no pre-processing"
+
+#Fit a boosted regression tree model
+fitboost <- function(df, dep.var) {
+  ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
+  formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
+  xgmodel <- train(formula, data = df, tuneLength = 10,
+                 method = "xgbTree",
+                 trControl = trainControl(method = "cv", number = 5,
+                                          preProc = c("center", "scale"),
+                                          verboseIter = FALSE))
+  return(xgmodel)
+  
+  }
 
 
 fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
   # split and redirect output
   print(paste(mtn, dep.var, axis))
-  mod <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
-  print(mod)
+  mod <- fitboost(PCAs[[mtn]][[dep.var]]$loadings, axis)
+  # save the model object:
+  saveRDS(mod, file.path(TOPO_RES_DIR, paste(mtn, "_", v, "_", axis, ".RDS", sep="")))
+  # then print some summary output:
+
+  print("mod$resample")
+  print(mod$resample)
+  
   png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
-  varImpPlot(mod, type=1)
+  plot(mod) # this produces RMSE by subsample by tree depth plots
   dev.off()
+
+  ## for rf models:
+  ## png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
+  ## Any useful mode diagnostic plots?
+  ## dev.off()
   res <- raster::predict(topostacks[[mtn]], mod)
   return(res)
 }
@@ -120,6 +158,20 @@ for (mtn in c("CM", "DM", "GM")) {
   }
   sink(NULL)
 }
+
+#compare fits between rf output and boosted regresession tree
+#can't get this to work. Says that object 'xgmodel' not found
+
+## DWS: code below refers to non existent objects. Looks like objects taht were
+## created in some one-off code somewhere else?
+
+## results <- resamples(list(xgboost=res, RF=model))
+## # summarize the distributions
+## summary(results)
+## # boxplots of results
+## bwplot(results)
+## # dot plots of results
+## dotplot(results)
 
 ## Provides load.predictions
 
@@ -150,3 +202,4 @@ saveRDS(load.predictions, file.path(TOPO_RES_DIR, "load_predictions.RDS"))
 ## makeMap(DM.tmin.predPC1)
 ## raster::writeRaster(DM.tmin.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
 ##             overwrite=TRUE)
+
