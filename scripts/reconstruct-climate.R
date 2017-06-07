@@ -1,3 +1,18 @@
+#!/usr/bin/env Rscript
+
+## Note: this is a command-line script so that it can be called from bash
+## scripts on the supercomputer cluster and run the indepent cliamte
+## reconstrucitons in parallel
+
+
+# example call:
+# ./reconstruct-climate.R CM CCSM4.r6i1p1 rcp45
+
+# will run reconstruction for the Chisos ("CM") the CCSM4.r6i1p GCM and
+# scenario rp45
+
+
+
 ## Steering code to
 
 # 1. Run PCAs to split iBUtton tmin and tmax records into spatial and temporal
@@ -14,37 +29,38 @@
 
 # Run the model fitting below at least once:
 
-#source("./predict-temporal.R") # provides scores.predicted
-#source("./predict-spatial.R")  # provides load.predicted
+# source("./predict-temporal.R") # provides scores.predicted
+# source("./predict-spatial.R")  # provides load.predicted
 
 # The results are in load.predictions and score.predictions. These objects are
-# saved as rds files which can be loaded:
+# saved as rds files which the code below reads as necessary
+
+#
+
 
 
 library(tibble)
-#library(dismo) # for biovars()
 library(dplyr)
 library(lubridate)
 
+
+OUT_DIR <- "../results/reconstructions"
+
+
 rasterLayerToDF <- function(layer, name) {
-  pl <-  as.data.frame(rasterToPoints(layer))
+  pl <-  as.data.frame(raster::rasterToPoints(layer))
   names(pl) <- c("x","y", name)
   return(pl)
 }
 
-proj_score_predictions_CNRM-CM5.r1i1p1_rcp45_GM_tmax
-## functions to retireve PCA loadings (spatial) and scores(temporal)
+## functions to retrieve PCA loadings (spatial) and scores(temporal)
 
-## Read necessary data (except gcm prediciotns which we only read as necessary)
+## Read necessary data (except gcm predictions which we only read as necessary)
 # spatial:
 TEMPO_RES_DIR <- "../results/tempo_mod_results/"
 load.predictions <- readRDS("../results/topo_mod_results/load_predictions.RDS")
-# temporal predictions:
-# historical...
-hist_score_predictions <- readRDS("../results/tempo_mod_results/hist_score_predictions.RDS")
-# and future projected:
 
-# Retrieve PCA loadings by mtn and variable
+# Fxn to retrieve PCA loadings by mtn and variable
 getLoadingsDF <- function(mtn, v) {
   ploadings <- load.predictions[[mtn]][[v]]
   pc1 <- rasterLayerToDF(ploadings[["PC1"]], "PC1")
@@ -54,9 +70,15 @@ getLoadingsDF <- function(mtn, v) {
   return(res)
 }
 
-# Retrieve PCA score predictions saved as RDS files by
-# predict_temporal.R
-get_score_prediction_series <- function(mtn, var, gcm=NULL, scenario=NULL) {
+# temporal predictions:
+
+# historical:
+hist_score_predictions <- readRDS("../results/tempo_mod_results/hist_score_predictions.RDS")
+
+# ... and future projected:
+## Fxn to retrieve predicted PCA scores (temporal component). If gcm or scnario
+## are NULL, the fxn returns the historical PCA time series for that range.
+getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
   if (is.null(gcm)) { # assume we want historic scores
     res <- hist_score_predictions[[mtn]][[var]] # already read from file
   }
@@ -70,10 +92,36 @@ get_score_prediction_series <- function(mtn, var, gcm=NULL, scenario=NULL) {
 }
 
   
+### Example using full tmin tmax time series and not summarizing to annual
+### bioclim variables: Example on small dataset: sensor locations only for the
+### DM. This works and gives numbers highly correlated witht he original
+### values! Cool. This gives an example of daily prediction values and is just
+### a toy.
+testRunExamplePrediction <- function() {
+
+    tl <- load.predictions$DM$tmin
+    tl.pc1 <- as.data.frame(rasterToPoints(tl$PC1))
+    names(tl.pc1) <- c("x","y", "PC1")
+    tl.pc2 <- as.data.frame(rasterToPoints(tl$PC2))
+    names(tl.pc2) <- c("x","y", "PC2")
+    tl.all <- inner_join(tl.pc1, tl.pc2)
 
 
+    ## # testing on original pca data, not predictions, for working out math:
+    test.load <- PCAs[["DM"]][["tmin"]]$loadings %>% dplyr::select(PC1, PC2, PC3)
+    test.scores <- PCAs[["DM"]][["tmin"]]$scores %>% dplyr::select(PC1, PC2, PC3)
 
-## TODO
+    # get matrices in correct dimensions
+    test.scores <- as.matrix(test.scores)
+    test.load <- t(as.matrix(test.load))
+
+    reproduce <- test.scores %*% test.load
+    reproduce <- data.frame(reproduce)
+    names(reproduce) <- PCAs[["DM"]][["tmin"]]$loadings$sensor
+    reproduce$datet <- PCAs[["DM"]][["tmin"]]$scores$datet
+
+    write.csv(reproduce, "../results/DM-TMIN-example-reconstruct.csv")
+}
 
 
 # bioclim annual summaries
@@ -108,10 +156,12 @@ bioclim <- function(datet, tmin, tmax) {
                       year=NA))
   }
   
-  monthlies <- as_data_frame(list(datet=datet, tmin=tmin, tmax=tmax)) %>%
-    group_by(month=month(datet)) %>%
-    summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
-              tmean=mean( (tmax+tmin)/2), na.rm=TRUE) %>%
+  monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, month=month(datet)) %>%
+    group_by(month) %>%
+    dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
+              tmean=mean( (tmax+tmin)/2, na.rm=TRUE))
+
+  monthlies <- monthlies %>%
     mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA))
 
   d <- list()
@@ -167,14 +217,10 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
-  srows <- sample(1:nrow(tmin_loadings), 1000)
-  tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
-  tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
+ srows <- sample(1:nrow(tmin_loadings), 1000)
+ tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
+ tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
   ## end testing code
-
-  
-  ## tmin_scores <- score.predictions[[mtn]][["tmin"]]
-  ## tmax_scores <- score.predictions[[mtn]][["tmax"]]
 
   # convert loadings to matrices now and once:
   tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings, -x, -y)))
@@ -210,48 +256,42 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 }
 
 
-### Example using full tmin tmax time series and not summarizing to annual
-### bioclim variables: Example on small dataset: sensor locations only for the
-### DM. This works and gives numbers highly correlated witht he original
-### values! Cool.
-runExamplePrediction <- function() {
-
-    tl <- load.predictions$DM$tmin
-    tl.pc1 <- as.data.frame(rasterToPoints(tl$PC1))
-    names(tl.pc1) <- c("x","y", "PC1")
-    tl.pc2 <- as.data.frame(rasterToPoints(tl$PC2))
-    names(tl.pc2) <- c("x","y", "PC2")
-    tl.all <- inner_join(tl.pc1, tl.pc2)
-
-
-    ## # testing on original pca data, not predictions, for working out math:
-    test.load <- PCAs[["DM"]][["tmin"]]$loadings %>% dplyr::select(PC1, PC2, PC3)
-    test.scores <- PCAs[["DM"]][["tmin"]]$scores %>% dplyr::select(PC1, PC2, PC3)
-
-    # get matrices in correct dimensions
-    test.scores <- as.matrix(test.scores)
-    test.load <- t(as.matrix(test.load))
-
-    reproduce <- test.scores %*% test.load
-    reproduce <- data.frame(reproduce)
-    names(reproduce) <- PCAs[["DM"]][["tmin"]]$loadings$sensor
-    reproduce$datet <- PCAs[["DM"]][["tmin"]]$scores$datet
-
-    write.csv(reproduce, "../results/DM-TMIN-example-reconstruct.csv")
-}
-
-
 ## OK main script here:
 
-CM_hist_climate <- reconstructTemp("CM",
-                                   hist_score_predictions[["CM"]][["tmin"]],
-                                   hist_score_predictions[["CM"]][["tmax"]])
+
+# run from command line. Expects, mtn, gcm, scenario. If only one argument is
+# apssed, it will conduct the historicalr econstruction for that mtn range.
+args <- commandArgs(trailingOnly=TRUE)
 
 
-DM_hist_climate <- reconstructTemp("DM")
-GM_hist_climate <- reconstructTemp("GM")
+# test data for running interactively:
+# args <- "CM"
 
-# save these results:
-write.csv(CM_hist_climate, "../results/reconstruct_CM.csv", row.names=FALSE)
-write.csv(DM_hist_climate, "../results/reconstruct_DM.csv", row.names=FALSE)
-write.csv(GM_hist_climate, "../results/reconstruct_GM.csv", row.names=FALSE)
+# test if there is at least one argument: if not, return an error
+if (length(args)==0) {
+  stop("At least one argument must be supplied (input file).n", call.=FALSE)
+}
+
+mtn <- args[1]
+if (length(args)==1) {
+  # historical
+  print("Reconstructing historic climate series")
+  gcm <- NULL
+  scenario <- NULL
+} else {
+  gcm <- args[2]
+  scenario <- args[3]
+}
+
+# now run the reconstruction
+oname <-  paste(mtn, gcm, scenario, sep="_")
+print(oname)
+res <- reconstructTemp(mtn,
+                       getScorePredictionSeries( mtn, "tmin", gcm, scenario),
+                       getScorePredictionSeries( mtn, "tmax", gcm, scenario))
+
+
+# save:
+ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
+print(paste("Saving:", ofile))
+saveRDS(res, ofile)
