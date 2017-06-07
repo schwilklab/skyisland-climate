@@ -18,7 +18,8 @@ set.seed(RSEED)
 source("./microclimate-topo-PCA.R") # provides PCAs object
 
 TOPO_RES_DIR <- "../results/topo_mod_results/"
-IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relev_l", "slope")
+
+IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relelev_l", "slope")
 
 library(caret)
 library(sp)
