@@ -89,8 +89,8 @@ fitRandomForest <- function(df, dep.var) {
     ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
     model <- train(formula, data = df, tuneLength = 10,
-      method = "rf",
-      trControl = trainControl(method = "cv", number = 10,  preProc = c("center", "scale"), verboseIter = TRUE))
+      method = "rf", metric = "RMSE",
+      trControl = trainControl(method = "cv", number = 3,  preProc = c("center", "scale"), verboseIter = TRUE))
     return(model)
     
 
@@ -109,42 +109,64 @@ fitboost <- function(df, dep.var) {
   ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
   formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
   xgmodel <- train(formula, data = df, tuneLength = 10,
-                 method = "xgbTree",
-                 trControl = trainControl(method = "cv", number = 5,
-                                          preProc = c("center", "scale"),
-                                          verboseIter = FALSE))
+                 method = "xgbTree",metric="RMSE",
+                 trControl = trainControl(method = "cv", number = 3,
+                                          preProc = c("center", "scale"), 
+                                          verboseIter = TRUE))
   return(xgmodel)
   
   }
 
 
-fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
+fitModelRunDiagnosticsrf <- function(mtn, dep.var, axis) {
   # split and redirect output
   print(paste(mtn, dep.var, axis))
-  mod <- fitboost(PCAs[[mtn]][[dep.var]]$loadings, axis)
+  modrf <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
   # save the model object:
-  saveRDS(mod, file.path(TOPO_RES_DIR, paste(mtn, "_", v, "_", axis, ".RDS", sep="")))
+  saveRDS(modrf, file.path(TOPO_RES_DIR, paste(mtn, "_", v, "_", axis, ".RDS", sep="")))
   # then print some summary output:
 
-  print("mod$resample")
-  print(mod$resample)
+  print("modrf$resample")
+  print(modrf$resample)
   
   png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
-  plot(mod) # this produces RMSE by subsample by tree depth plots
+  plot(modrf) # this produces RMSE by subsample by tree depth plots
   dev.off()
 
   ## for rf models:
   ## png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
   ## Any useful mode diagnostic plots?
   ## dev.off()
-  res <- raster::predict(topostacks[[mtn]], mod)
-  return(res)
+  resrf <- raster::predict(topostacks[[mtn]], modrf)
+  return(resrf)
 }
 
+
+#boost model
+
+fitModelRunDiagnosticsboost <- function(mtn, dep.var, axis) {
+  # split and redirect output
+  print(paste(mtn, dep.var, axis))
+  modboost <- fitboost(PCAs[[mtn]][[dep.var]]$loadings, axis)
+  # save the model object:
+  saveRDS(modboost, file.path(TOPO_RES_DIR, paste(mtn, "_", v, "_", axis, ".RDS", sep="")))
+  # then print some summary output:
   
+  print("modboost$resample")
+  print(modboost$resample)
+  
+  png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
+  plot(modboost) # this produces RMSE by subsample by tree depth plots
+  dev.off()
+  
+  ## for boost models:
+  resboost <- raster::predict(topostacks[[mtn]], modboost)
+  return(resboost)
+}
 ## Main script
 ##############
-load.predictions <- list()
+#RF
+load.predictionsrf <- list()
 for (mtn in c("CM", "DM", "GM")) {
   load.predictions[[mtn]] <- list()
   for (v in c("tmin", "tmax")) {
@@ -153,26 +175,36 @@ for (mtn in c("CM", "DM", "GM")) {
     checkCorrelations(mtn, v)
     load.predictions[[mtn]][[v]] <- list()
     for(a in c("PC1", "PC2", "PC3")) {
-      load.predictions[[mtn]][[v]][[a]] <- fitModelRunDiagnostics(mtn, v, a)
+      load.predictions[[mtn]][[v]][[a]] <- fitModelRunDiagnosticsrf(mtn, v, a)
     }
   }
   sink(NULL)
 }
 
+#boost
+load.predictionsboost <- list()
+for (mtn in c("CM", "DM", "GM")) {
+  load.predictions[[mtn]] <- list()
+  for (v in c("tmin", "tmax")) {
+    sink(file = file.path(TOPO_RES_DIR, paste(mtn, "_", v, ".txt", sep="")),
+         append = FALSE, split = TRUE)
+    checkCorrelations(mtn, v)
+    load.predictions[[mtn]][[v]] <- list()
+    for(a in c("PC1", "PC2", "PC3")) {
+      load.predictions[[mtn]][[v]][[a]] <- fitModelRunDiagnosticsboost(mtn, v, a)
+    }
+  }
+  sink(NULL)
+}
+
+
 #compare fits between rf output and boosted regresession tree
-#can't get this to work. Says that object 'xgmodel' not found
-
-## DWS: code below refers to non existent objects. Looks like objects taht were
-## created in some one-off code somewhere else?
-
-## results <- resamples(list(xgboost=res, RF=model))
-## # summarize the distributions
-## summary(results)
-## # boxplots of results
-## bwplot(results)
-## # dot plots of results
-## dotplot(results)
-
+resamps <- resamples(list(xgboost=mod, RF=modrf))
+summary(resamps)
+modelDifferences <- diff(resamps)
+summary(modelDifferences)
+bwplot(modelDifferences, layout = c(2, 1),
+       scales = list(x = list(relation="free")))
 ## Provides load.predictions
 
 # and saves:
