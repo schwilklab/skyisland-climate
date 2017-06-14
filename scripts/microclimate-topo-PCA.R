@@ -20,7 +20,7 @@ PROJ_STRING <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 library(ggplot2)
 library(tidyr)
-library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
+#library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
 library(dplyr)
 
 extractVals1Mtn <- function(themtn, topostacks) {
