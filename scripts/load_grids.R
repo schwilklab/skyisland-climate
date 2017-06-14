@@ -29,6 +29,8 @@ readGridFolder <- function(fpath) {
     return(topostack)
 }
 
+print("loading topo grid data")
+
 # Now get a raster::stack object for each mtn range
 topostacks <- list()
 topostacks[["DM"]] <- get_data(file.path(DATA_CACHE_DIR, "DM-grids.rds"), GRID_TIMESTAMP_DM,

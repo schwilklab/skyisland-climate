@@ -68,6 +68,7 @@ monthly.summaries <- function(dailytemps){
 
 
 ### main script ###
+print("loading sensor data")
 source("./iButton.R")
 
 # get time of last iButton merge
