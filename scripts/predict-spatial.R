@@ -39,21 +39,6 @@ makeMap <- function(topolayer) {
         geom_raster()
 }
 
-## divide into training and test data: The importance of this is debatable
-## because RF uses both boosting and bagging. There are a lot of online
-## discussion boards out there debating this, and I really haven't used this in
-## prior models because RF already gives accuracy statistics.
-## DWS: I don't think we can afford to split up the sensors into training and
-## testing with so few.
-splitdf <- function(dataframe) {
-  index <- 1:nrow(dataframe)
-  trainindex <- sample(index, trunc(length(index)/2))
-  trainset <- dataframe[trainindex, ]
-  testset <- dataframe[-trainindex, ]
-  return(list(trainset=trainset,testset=testset))
-}
-
-
 # Just a quick and dirty check of most important pairwise correlations Just
 # checks PC1 -- PC3 against all other variables and prints out pearson
 # correlation coefficients greater than 0.5.
@@ -74,12 +59,12 @@ checkCorrelations <- function(mtn, var) {
         ## PC2:
     print("PC3 correlates:")
     print(var.cors %>% filter(abs(PC3) > 0.5) %>% dplyr::select(vars, PC3))
-    png(file.path(TOPO_RES_DIR, paste(mtn, "_", var, "_splot", ".png", sep="")),
-        height=1200, width=1200)
     if(DO_PAIR_PLOTS) {
-        g <- ggpairs(df)
-        print(g)
-        dev.off()
+      png(file.path(TOPO_RES_DIR, paste(mtn, "_", var, "_splot", ".png", sep="")),
+          height=1200, width=1200)
+      g <- ggpairs(df)
+      print(g)
+      dev.off()
     }
 }
 
@@ -89,59 +74,96 @@ fitRandomForest <- function(df, dep.var) {
     ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
     model <- train(formula, data = df, tuneLength = 10,
-      method = "rf",
-      trControl = trainControl(method = "cv", number = 10,  preProc = c("center", "scale"), verboseIter = TRUE))
+      method = "rf", metric = "RMSE",
+      trControl = trainControl(method = "cv", number = 3,
+                               preProc = c("center", "scale"),
+                               verboseIter = FALSE)) # DWS: I suggest leaving
+                                                     # thes FALSE or we will
+                                                     # clog the whole log file
     return(model)
-    
-
 }
 
 
-## comment from @hpoulos:
-# for some reason the print out gives an Rsquared of 1 for each model produced,
-# but if you specify this print(model) it gives real Rsquared numbers. Not sure
-# where to stick this into the function above I tried to put it beore the
-# bracket, but that did nothing I also specified centering and scaling for
-# pre-processing but the print(model) command lists "no pre-processing"
-
-#Fit a boosted regression tree model
+## Fit a boosted regression tree model
 fitboost <- function(df, dep.var) {
   ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
   formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
-  xgmodel <- train(formula, data = df, tuneLength = 10,
-                 method = "xgbTree",
-                 trControl = trainControl(method = "cv", number = 5,
-                                          preProc = c("center", "scale"),
-                                          verboseIter = FALSE))
+  xgmodel <- train(formula, data = df, tuneLength = 2, # tunelength should be changed to 10 in production code
+                   method = "xgbTree",metric="RMSE",
+                   trControl = trainControl(method = "cv", number = 3,
+                                            preProc = c("center", "scale"), 
+                                            verboseIter = FALSE))
   return(xgmodel)
-  
-  }
+}
 
 
+## This function fits an RF model and a boosted regression tree model, prints
+## some summary stats, then predicts PCA loadings based on the boost model and
+## returns those predicted PCA loadings.
+
+## TODO: add model selection code so that the prediction uses the best model
+## (either modrf or modboost)
 fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
-  # split and redirect output
   print(paste(mtn, dep.var, axis))
-  mod <- fitboost(PCAs[[mtn]][[dep.var]]$loadings, axis)
+
+  # fit an RF model and save it
+  print("Fitting RF model")
+  modrf <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
+  saveRDS(modrf, file.path(TOPO_RES_DIR,
+                           paste(mtn, "_", v, "_", axis, "_", "RF", ".RDS", sep="")))
+
+  # do the same with a boost model
+  print("Fitting BOOST model")
+  modboost <- fitboost(PCAs[[mtn]][[dep.var]]$loadings, axis)
   # save the model object:
-  saveRDS(mod, file.path(TOPO_RES_DIR, paste(mtn, "_", v, "_", axis, ".RDS", sep="")))
-  # then print some summary output:
+  saveRDS(modboost, file.path(TOPO_RES_DIR,
+                              paste(mtn, "_", v, "_", axis, "_", "BOOST", ".RDS", sep="")))
 
-  print("mod$resample")
-  print(mod$resample)
+
+  # then print some summary output on each model:
+  print("modrf$resample")
+  print(modrf$resample)
+  print("modboost$resample")
+  print(modboost$resample)
   
-  png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
-  plot(mod) # this produces RMSE by subsample by tree depth plots
-  dev.off()
+  # And some diagnostic plots on each
 
-  ## for rf models:
-  ## png(file = file.path(TOPO_RES_DIR, paste(mtn, "_", dep.var, "_", axis, ".png", sep="")))
-  ## Any useful mode diagnostic plots?
+  ## TODO: this code does not make sense as these two objects, modrf and modboost,
+  ## do not implement a default plot() method.
+  
+  ## print("Producing model diagnostic plots")
+  ## png(file = file.path(TOPO_RES_DIR,
+  ##                      paste(mtn, "_", dep.var, "_", axis, "_", "RF", ".png", sep="")))
+  ## plot(modrf) # this produces RMSE by subsample by tree depth plots
   ## dev.off()
-  res <- raster::predict(topostacks[[mtn]], mod)
+
+  ## png(file = file.path(TOPO_RES_DIR,
+  ##                      paste(mtn, "_", dep.var, "_", axis, "_", "BOOST", ".png", sep="")))
+  ## plot(modboost) # this produces RMSE by subsample by tree depth plots
+  ## dev.off()
+ 
+
+  # compare fits between rf output and boosted regression tree
+  resamps <- resamples(list(xgboost=modboost, RF=modrf))
+  print(summary(resamps))
+  modelDifferences <- diff(resamps)
+  print(summary(modelDifferences))
+
+  png(file = file.path(TOPO_RES_DIR,
+                       paste(mtn, "_", dep.var, "_", axis, "_", "MODDIFFS", ".png", sep="")))
+  bwplot(modelDifferences, layout = c(2, 1), scales = list(x = list(relation="free")))
+  dev.off()
+  
+  ##  TODO: We still need the actual model selection code here ....
+  ## eg bestmod <-  ?????????????
+  ## temporary, just choose boost model:
+  bestmod <- modboost
+  
+  res <- raster::predict(topostacks[[mtn]], bestmod)
   return(res)
 }
 
-  
+
 ## Main script
 ##############
 load.predictions <- list()
@@ -159,19 +181,7 @@ for (mtn in c("CM", "DM", "GM")) {
   sink(NULL)
 }
 
-#compare fits between rf output and boosted regresession tree
-#can't get this to work. Says that object 'xgmodel' not found
 
-## DWS: code below refers to non existent objects. Looks like objects taht were
-## created in some one-off code somewhere else?
-
-## results <- resamples(list(xgboost=res, RF=model))
-## # summarize the distributions
-## summary(results)
-## # boxplots of results
-## bwplot(results)
-## # dot plots of results
-## dotplot(results)
 
 ## Provides load.predictions
 
