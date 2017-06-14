@@ -1,15 +1,14 @@
 #!/bin/bash
 
-## Run the full landscape historical temperature reconstruction
-
+## Run the topo model fitting
 
 #$ -V
-#$ -N reconstruct_temps
+#$ -N predict-spatial
 #$ -o ../results/$JOB_NAME.o$JOB_ID
 #$ -e ../results/$JOB_NAME.e$JOB_ID
 #$ -cwd
 #$ -S /bin/bash
 #$ -P hrothgar
-#$ -pe fill 20
+#$ -pe fill 1
 
 R --vanilla < ~/projects/skyisland-climate/scripts/predict-spatial.R
