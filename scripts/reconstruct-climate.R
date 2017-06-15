@@ -233,9 +233,9 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
- srows <- sample(1:nrow(tmin_loadings), 1000)
- tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
- tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
+ ## srows <- sample(1:nrow(tmin_loadings), 1000)
+ ## tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
+ ## tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
   ## end testing code
 
   # convert loadings to matrices now and once:
