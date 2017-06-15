@@ -76,12 +76,12 @@ checkCorrelations <- function(mtn, var) {
 fitRandomForest <- function(df, dep.var) {
     ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
-    model <- train(formula, data = df, tuneLength = 10,
+    model <- train(formula, data = df, tuneLength = 5,
       method = "rf", metric = "RMSE",
-      trControl = trainControl(method = "cv", number = 10,
+      trControl = trainControl(method = "cv", number = 5,
                                preProc = c("center", "scale"),
                                verboseIter = FALSE)) # DWS: I suggest leaving
-                                                     # thes FALSE or we will
+                                                     # this FALSE or we will
                                                      # clog the whole log file
     return(model)
 }
@@ -91,9 +91,9 @@ fitRandomForest <- function(df, dep.var) {
 fitboost <- function(df, dep.var) {
   ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
   formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
-  xgmodel <- train(formula, data = df, tuneLength = 10, # tunelength should be changed to 10 in production code
+  xgmodel <- train(formula, data = df, tuneLength = 5, 
                    method = "xgbTree",metric="RMSE",
-                   trControl = trainControl(method = "cv", number = 10,
+                   trControl = trainControl(method = "cv", number = 5,
                                             preProc = c("center", "scale"), 
                                             verboseIter = FALSE))
   return(xgmodel)
@@ -110,9 +110,9 @@ fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
   print(paste(mtn, dep.var, axis))
 
   ## # fit an RF model and save it
-  ## print("Fitting RF model")
-  ## modrf <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
-  ## saveRDS(modrf, file.path(TOPO_RES_DIR,
+  print("Fitting RF model")
+  modrf <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
+  saveRDS(modrf, file.path(TOPO_RES_DIR,
   ##                          paste(mtn, "_", v, "_", axis, "_", "RF", ".RDS", sep="")))
 
   # do the same with a boost model
@@ -124,8 +124,8 @@ fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
 
 
   # then print some summary output on each model:
-  ## print("modrf$resample")
-  ## print(modrf$resample)
+  print("modrf$resample")
+  print(modrf$resample)
   print("modboost$resample")
   print(modboost$resample)
   
@@ -147,15 +147,15 @@ fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
  
 
   # compare fits between rf output and boosted regression tree
-  ## resamps <- resamples(list(xgboost=modboost, RF=modrf))
-  ## print(summary(resamps))
-  ## modelDifferences <- diff(resamps)
-  ## print(summary(modelDifferences))
+  resamps <- resamples(list(xgboost=modboost, RF=modrf))
+  print(summary(resamps))
+  modelDifferences <- diff(resamps)
+  print(summary(modelDifferences))
 
-  ## png(file = file.path(TOPO_RES_DIR,
-  ##                      paste(mtn, "_", dep.var, "_", axis, "_", "MODDIFFS", ".png", sep="")))
-  ## bwplot(modelDifferences, layout = c(2, 1), scales = list(x = list(relation="free")))
-  ## dev.off()
+  png(file = file.path(TOPO_RES_DIR,
+                       paste(mtn, "_", dep.var, "_", axis, "_", "MODDIFFS", ".png", sep="")))
+  bwplot(modelDifferences, layout = c(2, 1), scales = list(x = list(relation="free")))
+  dev.off()
 
   ## eg bestmod <-  ?????????????
   ## temporary, just choose boost model:
