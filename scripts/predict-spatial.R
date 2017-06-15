@@ -78,7 +78,7 @@ fitRandomForest <- function(df, dep.var) {
       trControl = trainControl(method = "cv", number = 5,
                                preProc = c("center", "scale"),
                                verboseIter = FALSE)) # DWS: I suggest leaving
-                                                     # thes FALSE or we will
+                                                     # this FALSE or we will
                                                      # clog the whole log file
     return(model)
 }
