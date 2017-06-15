@@ -24,8 +24,8 @@ IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","
 library(caret)
 library(sp)
 library(dplyr)
-library(doMC)  # caret will use if loaded
-registerDoMC(cores=7)
+## library(doMC)  # caret will use if loaded
+## registerDoMC(cores=7)
 
 #library(xgboost) # not used?
 
