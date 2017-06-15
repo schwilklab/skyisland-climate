@@ -19,29 +19,29 @@ qsub_lines ="""#!/bin/bash
 #$ -cwd
 #$ -S /bin/bash
 #$ -P hrothgar
-#$ -pe fill 1
+#$ -pe fill 20
 #$ -q ivy-highmem
 
-R --vanilla < ~/projects/skyisland-climate/scripts/reconstruct-climate.R {1} {2} {3}
+R --slave --args  {1} {2} {3} < ~/projects/skyisland-climate/scripts/reconstruct-climate.R
 """
 
 
 # historical
 for mtn in mtns :
-    job = "../results/historical_" + mtn
-    fname = "qsub_reconstruct_hist_" + mtn
+    job = "recons_hist_" + mtn
+    fname = "qsub_recons_hist_" + mtn
     f = open(fname, "w")
     f.write(qsub_lines.format(job, mtn, "", ""))
     f.close()
-    subprocess.Popen("qsub " + fname)
+#    subprocess.Popen("qsub " + fname)
 
 # projected
 for mtn in mtns:
     for gcm in gcms:
         for sc in scenarios:
-            job = "../results/historical" + "_".join([mtn, gcm, sc])
-            fname = "qsub_reconstruct" + "_".join([mtn, gcm, sc])
+            job = "recons_proj_" + "_".join([mtn, gcm, sc])
+            fname = "qsub_recons_" + "_".join([mtn, gcm, sc])
             f = open(fname, "w")
             f.write(qsub_lines.format(job, mtn, gcm, sc))
             f.close()
-            subprocess.Popen("qsub " + fname)
+#            subprocess.Popen("qsub " + fname)
