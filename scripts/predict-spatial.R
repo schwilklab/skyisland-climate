@@ -73,9 +73,9 @@ checkCorrelations <- function(mtn, var) {
 fitRandomForest <- function(df, dep.var) {
     ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
     formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
-    model <- train(formula, data = df, tuneLength = 10,
+    model <- train(formula, data = df, tuneLength = 5,
       method = "rf", metric = "RMSE",
-      trControl = trainControl(method = "cv", number = 3,
+      trControl = trainControl(method = "cv", number = 5,
                                preProc = c("center", "scale"),
                                verboseIter = FALSE)) # DWS: I suggest leaving
                                                      # thes FALSE or we will
@@ -88,9 +88,9 @@ fitRandomForest <- function(df, dep.var) {
 fitboost <- function(df, dep.var) {
   ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
   formula <- as.formula(paste(dep.var, " ~ ", ind.vars))
-  xgmodel <- train(formula, data = df, tuneLength = 2, # tunelength should be changed to 10 in production code
+  xgmodel <- train(formula, data = df, tuneLength = 5, 
                    method = "xgbTree",metric="RMSE",
-                   trControl = trainControl(method = "cv", number = 3,
+                   trControl = trainControl(method = "cv", number = 5,
                                             preProc = c("center", "scale"), 
                                             verboseIter = FALSE))
   return(xgmodel)
