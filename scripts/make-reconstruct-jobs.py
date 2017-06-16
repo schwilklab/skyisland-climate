@@ -19,8 +19,8 @@ qsub_lines ="""#!/bin/bash
 #$ -cwd
 #$ -S /bin/bash
 #$ -P hrothgar
-#$ -pe fill 20
-#$ -q ivy-highmem
+#$ -pe fill 12
+#$ -q normal
 
 R --slave --args  {1} {2} {3} < ~/projects/skyisland-climate/scripts/reconstruct-climate.R
 """

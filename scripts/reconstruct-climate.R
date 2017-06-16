@@ -46,9 +46,9 @@ library(lubridate)
 # memory) and 2) trivial parallelization across gcms and scenarios
 ## library(parallel)
 
-## no_cores <- detectCores()
-## print(sprintf("%d cores detected", no_cores))
-## cl <- makeCluster(no_cores-1, type="FORK")
+no_cores <- detectCores()
+print(sprintf("%d cores detected", no_cores))
+cl <- makeCluster(no_cores-1, type="FORK")
 
 ## parallel matrix multiplication
 matprod.par <- function(cl, A, B) {
@@ -284,7 +284,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 args <- commandArgs(trailingOnly=TRUE)
 
 # test data for running interactively:
-args <- "CM"
+#args <- "CM"
 
 # test if there is at least one argument: if not, return an error
 if (length(args)==0) {
@@ -315,4 +315,4 @@ ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
 print(paste("Saving:", ofile))
 saveRDS(res, ofile)
 
-## cl.close()
+cl.close()
