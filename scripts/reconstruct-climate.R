@@ -44,7 +44,7 @@ library(lubridate)
 # I'm leaving this aprallel implimentation of matrix multiplication for now but
 # the code does not use it and we mostly use horthgar right now for 1) big
 # memory) and 2) trivial parallelization across gcms and scenarios
-## library(parallel)
+library(parallel)
 
 no_cores <- detectCores()
 print(sprintf("%d cores detected", no_cores))
