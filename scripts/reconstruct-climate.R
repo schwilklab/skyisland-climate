@@ -216,7 +216,6 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
 }
 
 
-
 ## transform predicted loadings and predicted scores back to tmin and tmax values
 # writes output to file. Loadings are PC axes for topgraphy, scores as PC axes
 # for daily temperature values. Function expects daily scores but in full year
@@ -227,36 +226,44 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
- srows <- sample(1:nrow(tmin_loadings), 100)
- tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
- tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
+  ## tmin_loadings <- filter(tmin_loadings, row_number() <=5000)
+  ## tmax_loadings <- filter(tmax_loadings, row_number() <=5000)
   ## end testing code
 
-  # convert loadings to matrices now and once. Transpose so that rows are PC
-  # axes (3) and columns are landscape psotions (many)
-  tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings, -x, -y)))
-  tmax_lmat <- t(as.matrix(dplyr::select(tmax_loadings, -x, -y)))
-  
-  # but do scores one year at a time
-#  tmin_scores <- tmin_scores %>% group_by(year = year(datet))
-#  tmax_scores <- tmax_scores %>% group_by(year = year(datet))
-
-
-  years <- unique(year(tmin_scores$datet))
-
-  res <- vector(mode="list", length=length(years))
-  for (i in seq_along(years)) {
-    print(years[i])
-#    if(years[i]==1912) browser()
-    tminsc <- filter(tmin_scores, year(datet)==years[i])
-    tmaxsc <- filter(tmax_scores, year(datet)==years[i])
+  nxy <- nrow(tmin_loadings)
+  chunk_size=1000
+  res = matrix(, nrow = 1, ncol = 12)
+  for(chunk in 0:((nxy %/% chunk_size))) {
+    start <- chunk*chunk_size
+    end   <- min(start+chunk_size-1, nxy)
+    ## print(paste("start", as.character(start)))
+    ## print(paste("end", as.character(end)))
     
-    res[[i]] <- summarizeOneYear(tminsc, tmaxsc, tmin_lmat, tmax_lmat)
-    res[[i]] <- cbind(res[[i]], tmin_loadings$x, tmin_loadings$y)
+    # convert loadings to matrices now and once. Transpose so that rows are PC
+    # axes (3) and columns are landscape positions (many)
+    tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings[start:end, ], -x, -y)))
+    tmax_lmat <- t(as.matrix(dplyr::select(tmax_loadings[start:end, ], -x, -y)))
+
+    years <- c(1950, 1951, 1952)
+    #years <- unique(year(tmin_scores$datet))
+
+    cres <- vector(mode="list", length=length(years))
+    for (i in seq_along(years)) {
+      print(paste(as.character(years[i]), "chunk", chunk+1, "of", nxy %/% chunk_size))
+      tminsc <- filter(tmin_scores, year(datet)==years[i])
+      tmaxsc <- filter(tmax_scores, year(datet)==years[i])
+    
+      cres[[i]] <- summarizeOneYear(tminsc, tmaxsc, tmin_lmat, tmax_lmat)
+      cres[[i]] <- cbind(cres[[i]], tmin_loadings$x[start:end], tmin_loadings$y[start:end])
+    }
+    cres <- do.call(rbind, cres)
+    res <- rbind(res, cres)
   }
-  res <- do.call(rbind, res)
+#  res <- do.call(rbind, res) # all chunks
+  
+    
   colnames(res) <- c("BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7",
-                  "BIO10", "BIO11", "year", "x", "y")
+                     "BIO10", "BIO11", "year", "x", "y")
   
   ## scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
 
