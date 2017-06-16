@@ -244,8 +244,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
     tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings[start:end, ], -x, -y)))
     tmax_lmat <- t(as.matrix(dplyr::select(tmax_loadings[start:end, ], -x, -y)))
 
-    years <- c(1950, 1951, 1952)
-    #years <- unique(year(tmin_scores$datet))
+    years <- unique(year(tmin_scores$datet))
 
     cres <- vector(mode="list", length=length(years))
     for (i in seq_along(years)) {
