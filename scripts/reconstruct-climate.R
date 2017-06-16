@@ -44,7 +44,11 @@ library(lubridate)
 # I'm leaving this aprallel implimentation of matrix multiplication for now but
 # the code does not use it and we mostly use horthgar right now for 1) big
 # memory) and 2) trivial parallelization across gcms and scenarios
-library(parallel)
+## library(parallel)
+
+## no_cores <- detectCores()
+## print(sprintf("%d cores detected", no_cores))
+## cl <- makeCluster(no_cores-1, type="FORK")
 
 ## parallel matrix multiplication
 matprod.par <- function(cl, A, B) {
@@ -104,7 +108,7 @@ getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
   return(res)
 }
 
-  
+
 ### Example using full tmin tmax time series and not summarizing to annual
 ### bioclim variables: Example on small dataset: sensor locations only for the
 ### DM. This works and gives numbers highly correlated witht he original
@@ -157,19 +161,10 @@ testRunExamplePrediction <- function() {
 
 
 # expects 1 year of data as two daily time series: tmin and tmax
-bioclim <- function(datet, tmin, tmax) {
+bioclim <- function(tmin, tmax, datet) {
   
   if (length(datet) < 300) {
-    return(data.frame(BIO1=NA,
-                      BIO2=NA,
-                      BIO4=NA,
-                      BIO5=NA,
-                      BIO6=NA,
-                      BIO7=NA,
-                      BIO3=NA,
-                      BIO10=NA,
-                      BIO11=NA,
-                      year=NA))
+    return(c(rep(NA, 9), year(datet[1])))
   }
   
   monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, month=month(datet)) %>%
@@ -180,30 +175,26 @@ bioclim <- function(datet, tmin, tmax) {
   monthlies <- monthlies %>%
     mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA))
 
-  d <- list()
-  d$BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
-  d$BIO2 <- mean(tmax - tmin, na.rm=TRUE)
-  d$BIO4 <- sd(monthlies$tmean) * 100
-  d$BIO5 <- max(monthlies$tmax)
-  d$BIO6 <- min(monthlies$tmin)
-  d$BIO7 <- d$BIO5-d$BIO6
-  d$BIO3 <- (d$BIO2/d$BIO7) * 100
-
-  d$BIO10 <- max(monthlies$qtmean, na.rm=TRUE)
-  d$BIO11 <- min(monthlies$qtmean, na.rm=TRUE)
-
-  d <- as_data_frame(d)
-  d$year <- year(datet[1])
-  return(d)
+  BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
+  BIO2 <- mean(tmax - tmin, na.rm=TRUE)
+  BIO4 <- sd(monthlies$tmean) * 100
+  BIO5 <- max(monthlies$tmax)
+  BIO6 <- min(monthlies$tmin)
+  BIO7 <- BIO5-BIO6
+  BIO3 <- (BIO2/BIO7) * 100
+  BIO10 <- max(monthlies$qtmean, na.rm=TRUE)
+  BIO11 <- min(monthlies$qtmean, na.rm=TRUE)       
+  year <- year(datet[1])
+  
+  return(c(BIO1,BIO2, BIO3,BIO4,BIO5,BIO6,BIO7, BIO10, BIO11, year) )
 }
 
+  
 
 # one year reconstruct and summarize
 summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
-  
-  ## tmins <- predict_monthly(tmin_scores, tmin_lmat)
-  ## tmaxs <- predict_monthly(tmax_scores, tmax_lmat)
- 
+
+  # The main step: matrix multiplication temporal x top PCAs:
   tmax_smat <- as.matrix(dplyr::select(tmax_scores, -datet))      
   tmaxs <- tmax_smat %*% tmax_lmat
 
@@ -212,13 +203,16 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
 
   ndates <- dim(tmins)[1]
   ncoords <- dim(tmins)[2]
+  
 
-  res <- vector(mode="list", length=ncoords)
-  for (i in 1:ncoords) {
-    res[[i]] <- bioclim(tmin_scores$datet, tmins[,i], tmaxs[,i])
-  }
+  idx   <- seq_along(tmins[1,])
+  tmins_list <- lapply(idx, function(ii) tmins[,ii])
+  tmaxs_list <- lapply(idx, function(ii) tmaxs[,ii])
 
-  return(bind_rows(res))
+  res <- mapply(bioclim, tmin=tmins_list, tmax=tmaxs_list,
+                MoreArgs = list(datet=tmin_scores$datet), SIMPLIFY=FALSE)
+  
+  return(do.call(rbind, res))
 }
 
 
@@ -233,12 +227,13 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
- ## srows <- sample(1:nrow(tmin_loadings), 1000)
- ## tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
- ## tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
+ srows <- sample(1:nrow(tmin_loadings), 100)
+ tmin_loadings <- filter(tmin_loadings, row_number() %in% srows)
+ tmax_loadings <- filter(tmax_loadings, row_number() %in% srows)
   ## end testing code
 
-  # convert loadings to matrices now and once:
+  # convert loadings to matrices now and once. Transpose so that rows are PC
+  # axes (3) and columns are landscape psotions (many)
   tmin_lmat <- t(as.matrix(dplyr::select(tmin_loadings, -x, -y)))
   tmax_lmat <- t(as.matrix(dplyr::select(tmax_loadings, -x, -y)))
   
@@ -255,10 +250,13 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 #    if(years[i]==1912) browser()
     tminsc <- filter(tmin_scores, year(datet)==years[i])
     tmaxsc <- filter(tmax_scores, year(datet)==years[i])
+    
     res[[i]] <- summarizeOneYear(tminsc, tmaxsc, tmin_lmat, tmax_lmat)
-    res[[i]] <- mutate(res[[i]], x=tmin_loadings$x, y=tmin_loadings$y)
+    res[[i]] <- cbind(res[[i]], tmin_loadings$x, tmin_loadings$y)
   }
-  res <- bind_rows(res)
+  res <- do.call(rbind, res)
+  colnames(res) <- c("BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7",
+                  "BIO10", "BIO11", "year", "x", "y")
   
   ## scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
 
@@ -266,9 +264,9 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
   ## res <- data.frame(res)
   ## names(res) <- paste(ploadings$x, ploadings$y, sep="_")
   ## res$datet <- pscores$datet
-  filename <- paste("reconstruct", "_", mtn, ".csv", sep="")
-  write.csv(res, file.path("../results/", filename))
-   return(res)
+  ## filename <- paste("reconstruct", "_", mtn, ".csv", sep="")
+  ## write.csv(res, file.path("../results/", filename))
+  return(res)
 }
 
 
@@ -279,7 +277,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
 args <- commandArgs(trailingOnly=TRUE)
 
 # test data for running interactively:
-# args <- "CM"
+args <- "CM"
 
 # test if there is at least one argument: if not, return an error
 if (length(args)==0) {
@@ -309,3 +307,5 @@ res <- reconstructTemp(mtn,
 ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
 print(paste("Saving:", ofile))
 saveRDS(res, ofile)
+
+## cl.close()
