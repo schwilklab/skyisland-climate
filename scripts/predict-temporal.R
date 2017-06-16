@@ -69,7 +69,7 @@ predict_temporal_scores <- function(wx_data, mtn, var) {
   predictions <- list()
   #wx_data <-  filter(wx_data, !(is.na(tmin) | is.na(tmax) | is.na(prcp) ) )
   for (a in PC_AXES) {
-    predictions[[a]] <- predict(temporal_mods[[mtn]][[var]][[a]], wx_data)
+    predictions[[a]] <- predict(temporal_mods[[mtn]][[var]][[a]], newdata = wx_data)
   }
   res <- data.frame(do.call(cbind, predictions))
   res$datet <- wx_data$datet
@@ -81,13 +81,14 @@ predict_temporal_scores <- function(wx_data, mtn, var) {
 ## Historical
 ## result stored in hist_score_predictions
 hist_score_predictions <- list()
-for (mtn in mtns) {
-  hist_score_predictions[[mtn]] = list()
-  wxd <- filter(hist_wx_data,
-                mtn==mtn &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
+for (m in mtns) {
+  hist_score_predictions[[m]] = list()
+  wxd <- filter(hist_wx_data, m==mtn &  ! ( is.na(tmin) | is.na(tmax) | is.na(prcp) ))
+  ## print(m)
+  ## print(nrow(wxd))
   for (v in c("tmin", "tmax")) {
-    print(paste(mtn, "_", v, ".txt", sep=""))
-    hist_score_predictions[[mtn]][[v]] <- predict_temporal_scores(wxd, mtn, v)
+    print(paste(m, "_", v, ".txt", sep=""))
+    hist_score_predictions[[m]][[v]] <- predict_temporal_scores(wxd, m, v)
   }
 }
 
@@ -101,18 +102,18 @@ for(gcm in unique(proj_wx_data$gcm)) {
   proj_score_predictions[[gcm]] <- list()
   for(scenario in unique(proj_wx_data$scenario)) {
     proj_score_predictions[[gcm]][[scenario]] <- list()
-    for (mtn in mtns) {
+    for (m in mtns) {
       wxd <- filter(proj_wx_data,
                     gcm == gcm & scenario == scenario &
-                      mtn==mtn &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
+                      mtn==m &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
       for (v in c("tmin", "tmax")) {
-        print(paste(gcm, scenario, mtn, v))
+        print(paste(gcm, scenario, m, v))
         fname <- file.path(TEMPO_RES_DIR,
-                           paste("proj_score_predictions", gcm, scenario, mtn, v, sep="_"))
+                           paste("proj_score_predictions", gcm, scenario, m, v, sep="_"))
         fname <- paste(fname, "RDS", sep=".")
         print("Saving to ")
         print(fname)
-        pred <- predict_temporal_scores(wxd, mtn, v)
+        pred <- predict_temporal_scores(wxd, m, v)
         saveRDS(pred, fname)
       }
     }
