@@ -42,7 +42,7 @@ library(dplyr)
 library(lubridate)
 
 # I'm leaving this aprallel implimentation of matrix multiplication for now but
-# the code does not use it and we mostly use horthgar right now for 1) big
+# the code does not use it and we mostly use hrothgar right now for 1) big
 # memory) and 2) trivial parallelization across gcms and scenarios
 library(parallel)
 
@@ -160,8 +160,8 @@ testRunExamplePrediction <- function() {
 ## BIO11 = Mean Temperature of Coldest Quarter
 
 
-# expects 1 year of data as two daily time series: tmin and tmax
-bioclim <- function(tmin, tmax, datet) {
+# expects 1 year of data as three daily time series: tmin, tmax and precip
+bioclim <- function(tmin, tmax, precip, datet) {
   
   if (length(datet) < 300) {
     return(c(rep(NA, 9), year(datet[1])))
@@ -170,10 +170,12 @@ bioclim <- function(tmin, tmax, datet) {
   monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, month=month(datet)) %>%
     group_by(month) %>%
     dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
-              tmean=mean( (tmax+tmin)/2, na.rm=TRUE))
+              tmean=mean( (tmax+tmin)/2, na.rm=TRUE), prsum = sum(precip, na.rm=TRUE))
 
   monthlies <- monthlies %>%
-    mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA))
+    mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA),
+           qpsum  = zoo::rollsum(x = prsum, 3, align = "right", fill = NA),
+           )
 
   BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
   BIO2 <- mean(tmax - tmin, na.rm=TRUE)
@@ -182,17 +184,19 @@ bioclim <- function(tmin, tmax, datet) {
   BIO6 <- min(monthlies$tmin)
   BIO7 <- BIO5-BIO6
   BIO3 <- (BIO2/BIO7) * 100
+  BIO8 <- monthlies$qtmean[which.max(monthlies$qpsum)]   # mean temp of wettest q
+  BIO9 <- monthlies$qtmean[which.min(monthlies$qpsum)]   # mean temp of driest q
   BIO10 <- max(monthlies$qtmean, na.rm=TRUE)
   BIO11 <- min(monthlies$qtmean, na.rm=TRUE)       
   year <- year(datet[1])
   
-  return(c(BIO1,BIO2, BIO3,BIO4,BIO5,BIO6,BIO7, BIO10, BIO11, year) )
+  return(c(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9, BIO10, BIO11, year))
 }
 
   
 
 # one year reconstruct and summarize
-summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
+summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat, wxprecip) {
 
   # The main step: matrix multiplication temporal x top PCAs:
   tmax_smat <- as.matrix(dplyr::select(tmax_scores, -datet))      
@@ -210,7 +214,8 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
   tmaxs_list <- lapply(idx, function(ii) tmaxs[,ii])
 
   res <- mapply(bioclim, tmin=tmins_list, tmax=tmaxs_list,
-                MoreArgs = list(datet=tmin_scores$datet), SIMPLIFY=FALSE)
+                MoreArgs = list(datet=tmin_scores$datet, precip=wxprecip),
+                SIMPLIFY=FALSE)
   
   return(do.call(rbind, res))
 }
@@ -220,7 +225,7 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat) {
 # writes output to file. Loadings are PC axes for topgraphy, scores as PC axes
 # for daily temperature values. Function expects daily scores but in full year
 # chunks.
-reconstructTemp <- function(mtn, tmin_scores, tmax_scores) {
+reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
   tmin_loadings <- getLoadingsDF(mtn, "tmin")
   tmax_loadings <- getLoadingsDF(mtn, "tmax")
 
