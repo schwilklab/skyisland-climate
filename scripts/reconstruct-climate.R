@@ -41,9 +41,6 @@ library(tibble)
 library(dplyr)
 library(lubridate)
 
-# I'm leaving this aprallel implimentation of matrix multiplication for now but
-# the code does not use it and we mostly use hrothgar right now for 1) big
-# memory) and 2) trivial parallelization across gcms and scenarios
 library(parallel)
 
 no_cores <- detectCores()
@@ -162,19 +159,19 @@ testRunExamplePrediction <- function() {
 
 # expects 1 year of data as three daily time series: tmin, tmax and precip
 bioclim <- function(tmin, tmax, precip, datet) {
-  
+
   if (length(datet) < 300) {
-    return(c(rep(NA, 9), year(datet[1])))
+    return(c(rep(NA, 11), year(datet[1])))
   }
-  
-  monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, month=month(datet)) %>%
+
+  monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, prcp=precip, month=month(datet)) %>%
     group_by(month) %>%
     dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
-              tmean=mean( (tmax+tmin)/2, na.rm=TRUE), prsum = sum(precip, na.rm=TRUE))
+              tmean=mean( (tmax+tmin)/2, na.rm=TRUE), prsum = sum(prcp, na.rm=TRUE))
 
   monthlies <- monthlies %>%
     mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA),
-           qpsum  = zoo::rollsum(x = prsum, 3, align = "right", fill = NA),
+           qpsum  = zoo::rollsum(x = prsum, 3, align = "right", fill = NA)
            )
 
   BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
@@ -193,7 +190,6 @@ bioclim <- function(tmin, tmax, precip, datet) {
   return(c(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9, BIO10, BIO11, year))
 }
 
-  
 
 # one year reconstruct and summarize
 summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat, wxprecip) {
@@ -231,13 +227,13 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
-  ## tmin_loadings <- filter(tmin_loadings, row_number() <=5000)
-  ## tmax_loadings <- filter(tmax_loadings, row_number() <=5000)
+  ## tmin_loadings <- filter(tmin_loadings, row_number() <=100)
+  ## tmax_loadings <- filter(tmax_loadings, row_number() <=100)
   ## end testing code
 
   nxy <- nrow(tmin_loadings)
   chunk_size=1000
-  res = matrix(, nrow = 1, ncol = 12)
+  res = matrix(, nrow = 1, ncol = 14)
   for(chunk in 0:((nxy %/% chunk_size))) {
     start <- chunk*chunk_size
     end   <- min(start+chunk_size-1, nxy)
@@ -256,67 +252,107 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
       print(paste(as.character(years[i]), "chunk", chunk+1, "of", nxy %/% chunk_size))
       tminsc <- filter(tmin_scores, year(datet)==years[i])
       tmaxsc <- filter(tmax_scores, year(datet)==years[i])
+      precipyr <- filter(precip_series, datet %in% tminsc$datet) %>% select(prcp)
     
-      cres[[i]] <- summarizeOneYear(tminsc, tmaxsc, tmin_lmat, tmax_lmat)
+      cres[[i]] <- summarizeOneYear(tminsc, tmaxsc, tmin_lmat, tmax_lmat, precipyr[,1])
       cres[[i]] <- cbind(cres[[i]], tmin_loadings$x[start:end], tmin_loadings$y[start:end])
     }
     cres <- do.call(rbind, cres)
     res <- rbind(res, cres)
   }
-#  res <- do.call(rbind, res) # all chunks
-  
-    
-  colnames(res) <- c("BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7",
-                     "BIO10", "BIO11", "year", "x", "y")
-  
-  ## scores_matrix <- as.matrix(dplyr::select(pscores, -datet))
 
-  ## res <- scores_matrix %*% loadings_matrix
-  ## res <- data.frame(res)
-  ## names(res) <- paste(ploadings$x, ploadings$y, sep="_")
-  ## res$datet <- pscores$datet
-  ## filename <- paste("reconstruct", "_", mtn, ".csv", sep="")
-  ## write.csv(res, file.path("../results/", filename))
-  return(res)
+  colnames(res) <- c("BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7",
+                     "BIO8", "BIO9", "BIO10", "BIO11", "year", "x", "y")
+  
+  return(res[-1,]) # drop first empty row
 }
 
 
 ## OK main script here:
+source("./wx-data.R") # for hist and projected precip time series needed for
+                      # bioclim 8 and 9
 
 # run from command line. Expects, mtn, gcm, scenario. If only one argument is
-# passed, it will conduct the historicalr econstruction for that mtn range.
+# passed, it will conduct the historical reconstruction for that mtn range.
 args <- commandArgs(trailingOnly=TRUE)
 
 # test data for running interactively:
-#args <- "CM"
+args <- "CM"
 
 # test if there is at least one argument: if not, return an error
 if (length(args)==0) {
   stop("At least one argument must be supplied (input file).\n", call.=FALSE)
 }
 
-mtn <- args[1]
+tmtn <- args[1]
 if (length(args)==1) {
   # historical
   print("Reconstructing historic climate series")
-  gcm <- NULL
-  scenario <- NULL
+  tgcm <- NULL
+  tscenario <- NULL
 } else {
-  gcm <- args[2]
-  scenario <- args[3]
+  tgcm <- args[2]
+  tscenario <- args[3]
 }
 
 # now run the reconstruction
-oname <-  paste(mtn, gcm, scenario, sep="_")
+oname <-  paste(tmtn, tgcm, tscenario, sep="_")
 print(oname)
-res <- reconstructTemp(mtn,
-                       getScorePredictionSeries( mtn, "tmin", gcm, scenario),
-                       getScorePredictionSeries( mtn, "tmax", gcm, scenario))
+if(is.null(tgcm)) {
+  precip <- filter(hist_wx_data, mtn==tmtn)
+} else {
+  precip <- filter(proj_wx_data, gcm==tgcm, scenario==tscenario)
+}
+
+res <- reconstructTemp(tmtn,
+                       getScorePredictionSeries(tmtn, "tmin", tgcm, tscenario),
+                       getScorePredictionSeries(tmtn, "tmax", tgcm, tscenario),
+                       precip)
 
 
-# save:
-ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
-print(paste("Saving:", ofile))
-saveRDS(res, ofile)
+# save time period snapshots
+
+res <- res %>% as_tibble() %>% filter(complete.cases(.))
+
+# historical
+if(is.null(tgcm) ) {
+  # full
+  full_hist_sum <- res %>% group_by(x,y) %>% select(-year) %>%
+    summarize_each(funs(mean))
+  ofile <- file.path(OUT_DIR, paste(oname, "_fullhist", ".RDS", sep=""))
+  print(paste("Saving:", ofile))
+  saveRDS(full_hist_sum, ofile)
+  #1961-2000
+  sum_1961_2000 <- res %>%  filter(year >= 1961 & year <= 2000) %>%
+    group_by(x,y) %>% select(-year) %>%
+    summarize_each(funs(mean))
+  ofile <- file.path(OUT_DIR, paste(oname, "_19612000", ".RDS", sep=""))
+  print(paste("Saving:", ofile))
+  saveRDS(sum_1961_2000, ofile)
+} else {
+  # 2020s, 2050s, and 2080s). So, 2050s is given by the mean of 2040–2069, etc
+  proj_sum_2020s <- res %>%  filter(year >= 2010 & year < 2040) %>%
+    group_by(x,y) %>% select(-year) %>%
+    summarize_each(funs(mean))
+  ofile <- file.path(OUT_DIR, paste(oname, "_2020s", ".RDS", sep=""))
+  print(paste("Saving:", ofile))
+  saveRDS(proj_sum_2020s, ofile)
+
+  # 2050s
+  proj_sum_2050s <- res %>%  filter(year >= 2040 & year < 2070) %>%
+    group_by(x,y) %>% select(-year) %>%
+    summarize_each(funs(mean))
+  ofile <- file.path(OUT_DIR, paste(oname, "_2050s", ".RDS", sep=""))
+  print(paste("Saving:", ofile))
+  saveRDS(proj_sum_2050s, ofile)
+
+  # 2080s
+  proj_sum_2080s <- res %>%  filter(year >= 2070 & year < 2100) %>%
+    group_by(x,y) %>% select(-year) %>%
+    summarize_each(funs(mean))
+  ofile <- file.path(OUT_DIR, paste(oname, "_2080s", ".RDS", sep=""))
+  print(paste("Saving:", ofile))
+  saveRDS(proj_sum_2080s, ofile)
+}
 
 cl.close()
