@@ -45,7 +45,7 @@ library(parallel)
 
 no_cores <- detectCores()
 print(sprintf("%d cores detected", no_cores))
-cl <- makeCluster(no_cores-1, type="FORK")
+CLUSTER <- makeCluster(no_cores-1, type="FORK")
 
 ## parallel matrix multiplication
 matprod.par <- function(cl, A, B) {
@@ -130,7 +130,7 @@ testRunExamplePrediction <- function() {
     test.load <- t(as.matrix(test.load))
 
     #reproduce <- test.scores %*% test.load
-    matprod.par(cl, test.scores, test.load)
+    matprod.par(CLUSTER, test.scores, test.load)
 
     reproduce <- data.frame(reproduce)
     names(reproduce) <- PCAs[["DM"]][["tmin"]]$loadings$sensor
@@ -196,10 +196,12 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat, wxp
 
   # The main step: matrix multiplication temporal x top PCAs:
   tmax_smat <- as.matrix(dplyr::select(tmax_scores, -datet))      
-  tmaxs <- tmax_smat %*% tmax_lmat
+  #tmaxs <- tmax_smat %*% tmax_lmat
+  tmaxs <- matprod.par(CLUSTER, tmax_smat, tmax_lmat)
 
   tmin_smat <- as.matrix(dplyr::select(tmin_scores, -datet))
-  tmins <- tmin_smat %*% tmin_lmat
+  #tmins <- tmin_smat %*% tmin_lmat
+  tmins <- matprod.par(CLUSTER, tmin_smat, tmin_lmat)
 
   ndates <- dim(tmins)[1]
   ncoords <- dim(tmins)[2]
@@ -209,9 +211,14 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat, wxp
   tmins_list <- lapply(idx, function(ii) tmins[,ii])
   tmaxs_list <- lapply(idx, function(ii) tmaxs[,ii])
 
-  res <- mapply(bioclim, tmin=tmins_list, tmax=tmaxs_list,
+  ## res <- mapply(bioclim, tmin=tmins_list, tmax=tmaxs_list,
+  ##               MoreArgs = list(datet=tmin_scores$datet, precip=wxprecip),
+  ##               SIMPLIFY=FALSE)
+
+  res <- clusterMap(cl=CLUSTER, fun=bioclim, tmin=tmins_list, tmax=tmaxs_list,
                 MoreArgs = list(datet=tmin_scores$datet, precip=wxprecip),
                 SIMPLIFY=FALSE)
+  
   
   return(do.call(rbind, res))
 }
