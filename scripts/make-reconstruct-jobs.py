@@ -23,7 +23,7 @@ OPM_NUM_THREADS=36
 #$ -S /bin/bash
 #$ -P quanah
 #$ -pe fill 36
-#$ -q normal
+#$ -q omni
 
 R --slave --args  {1} {2} {3} < ~/projects/skyisland-climate/scripts/reconstruct-climate.R
 """
