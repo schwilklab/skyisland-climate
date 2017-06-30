@@ -11,6 +11,9 @@ qsub_lines ="""#!/bin/bash
 
 ## Run the full landscape historical temperature reconstruction
 
+# necessary for R to use BLAS libraries on quanah:
+MKL_NUM_THREADS=36
+OPM_NUM_THREADS=36
 
 #$ -V
 #$ -N {0}
@@ -18,8 +21,8 @@ qsub_lines ="""#!/bin/bash
 #$ -e ../results/$JOB_NAME.e$JOB_ID
 #$ -cwd
 #$ -S /bin/bash
-#$ -P hrothgar
-#$ -pe fill 12
+#$ -P quanah
+#$ -pe fill 36
 #$ -q normal
 
 R --slave --args  {1} {2} {3} < ~/projects/skyisland-climate/scripts/reconstruct-climate.R

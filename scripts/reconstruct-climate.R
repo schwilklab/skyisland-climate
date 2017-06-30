@@ -196,11 +196,11 @@ summarizeOneYear <- function(tmin_scores, tmax_scores, tmin_lmat, tmax_lmat, wxp
 
   # The main step: matrix multiplication temporal x top PCAs:
   tmax_smat <- as.matrix(dplyr::select(tmax_scores, -datet))      
-  #tmaxs <- tmax_smat %*% tmax_lmat
-  tmaxs <- matprod.par(CLUSTER, tmax_smat, tmax_lmat)
+  tmaxs <- tmax_smat %*% tmax_lmat
+  #tmaxs <- matprod.par(CLUSTER, tmax_smat, tmax_lmat)
 
-  tmin_smat <- as.matrix(dplyr::select(tmin_scores, -datet))
-  #tmins <- tmin_smat %*% tmin_lmat
+  #tmin_smat <- as.matrix(dplyr::select(tmin_scores, -datet))
+  tmins <- tmin_smat %*% tmin_lmat
   tmins <- matprod.par(CLUSTER, tmin_smat, tmin_lmat)
 
   ndates <- dim(tmins)[1]
