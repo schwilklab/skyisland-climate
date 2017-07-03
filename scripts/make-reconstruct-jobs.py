@@ -17,8 +17,8 @@ module load R
 # module load gdal # not yet working, link errors. Not needed
 
 # necessary for R to use BLAS libraries on quanah:
-MKL_NUM_THREADS=36
-OPM_NUM_THREADS=36
+export MKL_NUM_THREADS=36
+export OPM_NUM_THREADS=36
 
 #$ -V
 #$ -N {0}
