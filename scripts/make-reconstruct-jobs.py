@@ -12,10 +12,9 @@ qsub_lines ="""#!/bin/bash
 ## Run the full landscape historical temperature reconstruction
 
 # load modules
-module load gnu
+module load intel
 module load R
-module load openblas
-# module load gdal # seems to only work on intel and not needed for now
+# module load gdal # not yet working, link errors. Not needed
 
 # necessary for R to use BLAS libraries on quanah:
 MKL_NUM_THREADS=36
