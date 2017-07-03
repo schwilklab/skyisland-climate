@@ -42,7 +42,7 @@ library(dplyr)
 library(lubridate)
 library(parallel)
 
-no_cores <- detectCores()
+no_cores <- 36 # detectCores()
 print(sprintf("%d cores detected", no_cores))
 CLUSTER <- makeCluster(no_cores-1, type="FORK")
 
