@@ -40,7 +40,6 @@
 library(tibble)
 library(dplyr)
 library(lubridate)
-
 library(parallel)
 
 no_cores <- detectCores()
