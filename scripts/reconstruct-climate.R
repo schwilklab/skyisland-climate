@@ -46,6 +46,18 @@ no_cores <- detectCores()
 print(sprintf("%d cores detected", no_cores))
 CLUSTER <- makeCluster(no_cores-1, type="FORK")
 
+
+# Two quick rolling functions to avoid using zoo package
+rollsum <- function(x, n=3L){
+  res <- tail(cumsum(x) - cumsum(c(rep(0, n), head(x, -n))), -n + 1)
+  return( c(rep(NA, n-1), res) )
+}
+
+rollmean <- function(x, n=3L){
+  res <-  ( tail(cumsum(x) - cumsum(c(rep(0, n), head(x, -n))), -n + 1) ) / n
+  return( c(rep(NA, n-1), res) )
+}
+
 ## parallel matrix multiplication
 matprod.par <- function(cl, A, B) {
   if (ncol(A) != nrow(B)) stop("Matrices do not conform")
@@ -169,8 +181,8 @@ bioclim <- function(tmin, tmax, precip, datet) {
               tmean=mean( (tmax+tmin)/2, na.rm=TRUE), prsum = sum(prcp, na.rm=TRUE))
 
   monthlies <- monthlies %>%
-    mutate(qtmean = zoo::rollmean(x = tmean, 3, align = "right", fill = NA),
-           qpsum  = zoo::rollsum(x = prsum, 3, align = "right", fill = NA)
+    mutate(qtmean = rollmean(x = tmean, 3),
+           qpsum  = rollsum(x = prsum, 3)
            )
 
   BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
