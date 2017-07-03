@@ -48,17 +48,6 @@ print(sprintf("%d cores detected", no_cores))
 cl <- makeCluster(no_cores-1, type="FORK")
 
 
-# Two quick rolling functions to avoid using zoo package
-rollsum <- function(x, n=3L){
-  res <- tail(cumsum(x) - cumsum(c(rep(0, n), head(x, -n))), -n + 1)
-  return( c(rep(NA, n-1), res) )
-}
-
-rollmean <- function(x, n=3L){
-  res <-  ( tail(cumsum(x) - cumsum(c(rep(0, n), head(x, -n))), -n + 1) ) / n
-  return( c(rep(NA, n-1), res) )
-}
-
 ## parallel matrix multiplication
 matprod.par <- function(cl, A, B) {
   if (ncol(A) != nrow(B)) stop("Matrices do not conform")
@@ -176,6 +165,18 @@ bioclim <- function(tmin, tmax, precip, datet) {
     return(c(rep(NA, 11), year(datet[1])))
   }
 
+
+  # Two quick rolling functions to avoid using zoo package
+  rollsum <- function(x, n=3L){
+    res <- tail(cumsum(x) - cumsum(c(rep(0, n), head(x, -n))), -n + 1)
+    return( c(rep(NA, n-1), res) )
+  }
+
+  rollmean <- function(x, n=3L){
+    res <-  ( tail(cumsum(x) - cumsum(c(rep(0, n), head(x, -n))), -n + 1) ) / n
+    return( c(rep(NA, n-1), res) )
+  }
+
   monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, prcp=precip, month=month(datet)) %>%
     group_by(month) %>%
     dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
@@ -261,7 +262,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
 
     cres <- vector(mode="list", length=length(years))
     for (i in seq_along(years)) {
-      print(paste(as.character(years[i]), "chunk", chunk+1, "of", nxy %/% chunk_size))
+      print(paste(as.character(years[i]), "chunk", chunk+1, "of",1 + ( nxy %/% chunk_size)))
       tminsc <- filter(tmin_scores, year(datet)==years[i])
       tmaxsc <- filter(tmax_scores, year(datet)==years[i])
       precipyr <- filter(precip_series, datet %in% tminsc$datet) %>% select(prcp)
