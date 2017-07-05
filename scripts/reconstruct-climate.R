@@ -320,7 +320,7 @@ print(oname)
 if(is.null(tgcm)) {
   precip <- filter(hist_wx_data, mtn==tmtn)
 } else {
-  precip <- filter(proj_wx_data, gcm==tgcm, scenario==tscenario)
+  precip <- filter(proj_wx_data, mtn== tmtn, gcm==tgcm, scenario==tscenario)
 }
 
 res <- reconstructTemp(tmtn,
