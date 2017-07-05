@@ -98,18 +98,18 @@ saveRDS(hist_score_predictions, file.path(TEMPO_RES_DIR, "hist_score_predictions
 ## GCM projected
 ## result stored in proj_score_predictions
 proj_score_predictions <- list()
-for(gcm in unique(proj_wx_data$gcm)) {
-  proj_score_predictions[[gcm]] <- list()
-  for(scenario in unique(proj_wx_data$scenario)) {
-    proj_score_predictions[[gcm]][[scenario]] <- list()
+for(tgcm in unique(proj_wx_data$gcm)) {
+  proj_score_predictions[[tgcm]] <- list()
+  for(tscenario in unique(proj_wx_data$scenario)) {
+    proj_score_predictions[[tgcm]][[tscenario]] <- list()
     for (m in mtns) {
       wxd <- filter(proj_wx_data,
-                    gcm == gcm & scenario == scenario &
+                    gcm == tgcm & scenario == tscenario &
                       mtn==m &  !(is.na(tmin) | is.na(tmax) | is.na(prcp) ))
       for (v in c("tmin", "tmax")) {
-        print(paste(gcm, scenario, m, v))
+        print(paste(tgcm, tscenario, m, v))
         fname <- file.path(TEMPO_RES_DIR,
-                           paste("proj_score_predictions", gcm, scenario, m, v, sep="_"))
+                           paste("proj_score_predictions", tgcm, tscenario, m, v, sep="_"))
         fname <- paste(fname, "RDS", sep=".")
         print("Saving to ")
         print(fname)
