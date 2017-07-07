@@ -102,8 +102,11 @@ getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
                            paste("proj_score_predictions", gcm, scenario, mtn, var, sep="_"))
         fname <- paste(fname, "RDS", sep=".")
     res <- readRDS(fname)
+    # leave out uneeded projected years
+    yrs <- year(res$datet)
+    res <- filter(res, yrs > 1960 & !(yrs %in% 2001:2010 ))
   }
-  return(filter(res, year(datet) > 1960))
+  return(res)
 }
 
 
