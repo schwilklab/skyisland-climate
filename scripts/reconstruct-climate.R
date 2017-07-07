@@ -254,7 +254,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
   ## end testing code
 
   nxy <- nrow(tmin_loadings)
-  chunk_size=3000
+  chunk_size=4000
   res = matrix(, nrow = 1, ncol = 14)
   for(chunk in 0:((nxy %/% chunk_size))) {
     start <- chunk*chunk_size
