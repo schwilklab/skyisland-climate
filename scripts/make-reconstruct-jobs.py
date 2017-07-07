@@ -47,7 +47,7 @@ for mtn in mtns :
 for mtn in mtns:
     for gcm in gcms:
         for sc in scenarios:
-            job = "recons_proj_" + "_".join([mtn, gcm, sc])
+            job = "_".join([mtn, gcm, sc]) + "_proj"
             fname = "qsub_recons_" + "_".join([mtn, gcm, sc])
             f = open(fname, "w")
             f.write(qsub_lines.format(job, mtn, gcm, sc))
