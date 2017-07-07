@@ -103,7 +103,7 @@ getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
         fname <- paste(fname, "RDS", sep=".")
     res <- readRDS(fname)
   }
-  return(res)
+  return(filter(res, year(datet) > 1960))
 }
 
 
@@ -343,29 +343,37 @@ if(is.null(tgcm) ) {
   print(paste("Saving:", ofile))
   saveRDS(sum_1961_2000, ofile)
 } else {
+  # projected summaries
+    #1961-2000
+  proj <- res %>%  filter(year >= 1961 & year <= 2000) %>%
+    group_by(x,y) %>% select(-year) %>%
+    summarize_each(funs(mean))
+  ofile <- file.path(OUT_DIR, paste(oname, "_19612000", ".RDS", sep=""))
+  print(paste("Saving:", ofile))
+  saveRDS(proj, ofile)
   # 2020s, 2050s, and 2080s). So, 2050s is given by the mean of 2040–2069, etc
-  proj_sum_2020s <- res %>%  filter(year >= 2010 & year < 2040) %>%
+  proj <- res %>%  filter(year >= 2010 & year < 2040) %>%
     group_by(x,y) %>% select(-year) %>%
     summarize_each(funs(mean))
   ofile <- file.path(OUT_DIR, paste(oname, "_2020s", ".RDS", sep=""))
   print(paste("Saving:", ofile))
-  saveRDS(proj_sum_2020s, ofile)
+  saveRDS(proj, ofile)
 
   # 2050s
-  proj_sum_2050s <- res %>%  filter(year >= 2040 & year < 2070) %>%
+  proj <- res %>%  filter(year >= 2040 & year < 2070) %>%
     group_by(x,y) %>% select(-year) %>%
     summarize_each(funs(mean))
   ofile <- file.path(OUT_DIR, paste(oname, "_2050s", ".RDS", sep=""))
   print(paste("Saving:", ofile))
-  saveRDS(proj_sum_2050s, ofile)
+  saveRDS(proj, ofile)
 
   # 2080s
-  proj_sum_2080s <- res %>%  filter(year >= 2070 & year < 2100) %>%
+  proj <- res %>%  filter(year >= 2070 & year < 2100) %>%
     group_by(x,y) %>% select(-year) %>%
     summarize_each(funs(mean))
   ofile <- file.path(OUT_DIR, paste(oname, "_2080s", ".RDS", sep=""))
   print(paste("Saving:", ofile))
-  saveRDS(proj_sum_2080s, ofile)
+  saveRDS(proj, ofile)
 }
 
 cl.close()
