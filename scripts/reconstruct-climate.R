@@ -290,7 +290,7 @@ source("./wx-data.R") # for hist and projected precip time series needed for
 args <- commandArgs(trailingOnly=TRUE)
 
 # test data for running interactively:
-args <- "CM"
+# args <- "CM"
 
 # test if there is at least one argument: if not, return an error
 if (length(args)==0) {
