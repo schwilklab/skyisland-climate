@@ -11,6 +11,10 @@
 6. Reclassify raster to No Data or class 1 = canopy cover > 10%.
 7. In conversion tools, use the raster to polygon tool. Be sure to that the simplify polygons box remains unchecked or it will not work. 
 8. Use the minimum bounding geometry operation. Select geometry type as “Convex Hulls” and hit OK. Select the large polygon if multiple smaller polygons are also generated (all of these small polygons were outside the extent of the original HUC-clipped grids anyway), and export as a new shapefile. Then, in Model Builder, clip each old .asc raster dataset to the extent of the convex hull shapefile, and export as a new .asc file.
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 
 ## Landscape metrics ##
 
