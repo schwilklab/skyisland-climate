@@ -264,8 +264,8 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
-  tmin_loadings <- filter(tmin_loadings, row_number() <=100)
-  tmax_loadings <- filter(tmax_loadings, row_number() <=100)
+  ## tmin_loadings <- filter(tmin_loadings, row_number() <=100)
+  ## tmax_loadings <- filter(tmax_loadings, row_number() <=100)
   ## end testing code
 
   nxy <- nrow(tmin_loadings)
