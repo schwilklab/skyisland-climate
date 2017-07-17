@@ -165,7 +165,7 @@ testRunExamplePrediction <- function() {
 bioclim <- function(tmin, tmax, precip, datet) {
 
   if (length(datet) < 300) {
-    return(c(rep(NA, 11), year(datet[1])))
+    return(c(rep(NA, 12), year(datet[1])))
   }
 
 
@@ -183,7 +183,8 @@ bioclim <- function(tmin, tmax, precip, datet) {
   monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, prcp=precip, month=month(datet)) %>%
     group_by(month) %>%
     dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
-              tmean=mean( (tmax+tmin)/2, na.rm=TRUE), prsum = sum(prcp, na.rm=TRUE))
+                     tmean=mean( (tmax+tmin)/2, na.rm=TRUE), mmin= min(tmin, na.rm=TRUE ),
+                     mmax=max(tmax, na.rm=TRUE), prsum = sum(prcp, na.rm=TRUE))
 
   monthlies <- monthlies %>%
     mutate(qtmean = rollmean(x = tmean, 3),
@@ -193,17 +194,22 @@ bioclim <- function(tmin, tmax, precip, datet) {
   BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
   BIO2 <- mean(tmax - tmin, na.rm=TRUE)
   BIO4 <- sd(monthlies$tmean) * 100
-  BIO5 <- max(monthlies$tmax)
-  BIO6 <- min(monthlies$tmin)
+  BIO5 <- monthlies$mmax[which.max(monthlies$tmean)] # max temp in hottest month
+  BIO6 <- monthlies$mmin[which.min(monthlies$tmean)] # min temp of coldest month
   BIO7 <- BIO5-BIO6
   BIO3 <- (BIO2/BIO7) * 100
   BIO8 <- monthlies$qtmean[which.max(monthlies$qpsum)]   # mean temp of wettest q
   BIO9 <- monthlies$qtmean[which.min(monthlies$qpsum)]   # mean temp of driest q
   BIO10 <- max(monthlies$qtmean, na.rm=TRUE)
-  BIO11 <- min(monthlies$qtmean, na.rm=TRUE)       
+  BIO11 <- min(monthlies$qtmean, na.rm=TRUE)
+
+  # and my own:
+  march_may_min <- min(monthlies$mmin[3:5])
+
+  
   year <- year(datet[1])
   
-  return(c(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9, BIO10, BIO11, year))
+  return(c(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9, BIO10, BIO11, march_may_min, year))
 }
 
 
@@ -243,13 +249,13 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
-  ## tmin_loadings <- filter(tmin_loadings, row_number() <=100)
-  ## tmax_loadings <- filter(tmax_loadings, row_number() <=100)
+  tmin_loadings <- filter(tmin_loadings, row_number() <=100)
+  tmax_loadings <- filter(tmax_loadings, row_number() <=100)
   ## end testing code
 
   nxy <- nrow(tmin_loadings)
   chunk_size=1000
-  res = matrix(, nrow = 1, ncol = 14)
+  res = matrix(, nrow = 1, ncol = 15)  # careful, ahrd coded size, 12 climv ars +x,y and year
   for(chunk in 0:((nxy %/% chunk_size))) {
     start <- chunk*chunk_size
     end   <- min(start+chunk_size-1, nxy)
@@ -278,7 +284,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
   }
 
   colnames(res) <- c("BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7",
-                     "BIO8", "BIO9", "BIO10", "BIO11", "year", "x", "y")
+                     "BIO8", "BIO9", "BIO10", "BIO11", "march_may_min", "year", "x", "y")
   
   return(res[-1,]) # drop first empty row
 }
