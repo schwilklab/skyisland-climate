@@ -37,8 +37,8 @@ R --slave --args  {1} {2} {3} {4} < ~/projects/skyisland-climate/scripts/reconst
 
 # historical
 for mtn in mtns :
-    job = "recons_hist_" + mtn
-    fname = "qsub_recons_hist_" + mtn
+    job = mtn + "_hist"
+    fname = "qs_" + mtn + "_hist"
     f = open(fname, "w")
     f.write(qsub_lines.format(job, mtn, "", "", ""))
     f.close()
