@@ -6,6 +6,7 @@ gcms = ["CCSM4.r6i1p1", "CNRM-CM5.r1i1p1", "CSIRO-Mk3-6-0.r2i1p1",
         "MIROC5.r1i1p1", "MPI-ESM-LR.r1i1p1", "MRI-CGCM3.r1i1p1"]
 scenarios = ["rcp45", "rcp85"]
 mtns = ["CM", "DM", "GM"]
+timeps = ["ref", "2020s", "2050s", "2080s"]
 
 qsub_lines ="""#!/bin/bash
 
@@ -22,7 +23,7 @@ qsub_lines ="""#!/bin/bash
 #$ -pe fill 12
 #$ -q normal
 
-R --slave --args  {1} {2} {3} < ~/projects/skyisland-climate/scripts/reconstruct-climate.R
+R --slave --args  {1} {2} {3} {4} < ~/projects/skyisland-climate/scripts/reconstruct-climate.R
 """
 
 
@@ -31,7 +32,7 @@ for mtn in mtns :
     job = "recons_hist_" + mtn
     fname = "qsub_recons_hist_" + mtn
     f = open(fname, "w")
-    f.write(qsub_lines.format(job, mtn, "", ""))
+    f.write(qsub_lines.format(job, mtn, "", "", ""))
     f.close()
 #    subprocess.Popen("qsub " + fname)
 
@@ -39,9 +40,10 @@ for mtn in mtns :
 for mtn in mtns:
     for gcm in gcms:
         for sc in scenarios:
-            job = "recons_proj_" + "_".join([mtn, gcm, sc])
-            fname = "qsub_recons_" + "_".join([mtn, gcm, sc])
-            f = open(fname, "w")
-            f.write(qsub_lines.format(job, mtn, gcm, sc))
-            f.close()
-#            subprocess.Popen("qsub " + fname)
+            for tp in timeps :
+                job = "rp_" + "_".join([mtn, gcm, sc, tp])
+                fname = "qs_" + "_".join([mtn, gcm, sc, tp])
+                f = open(fname, "w")
+                f.write(qsub_lines.format(job, mtn, gcm, sc, tp))
+                f.close()
+                #            subprocess.Popen("qsub " + fname)

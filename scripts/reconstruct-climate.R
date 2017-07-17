@@ -6,10 +6,10 @@
 
 
 # example call:
-# ./reconstruct-climate.R CM CCSM4.r6i1p1 rcp45
+# ./reconstruct-climate.R CM CCSM4.r6i1p1 rcp45 2020s
 
 # will run reconstruction for the Chisos ("CM") the CCSM4.r6i1p GCM and
-# scenario rp45
+# scenario rp45 and for the 2020s time period (2011-2030).
 
 
 
@@ -93,7 +93,7 @@ hist_score_predictions <- readRDS("../results/tempo_mod_results/hist_score_predi
 # ... and future projected:
 ## Fxn to retrieve predicted PCA scores (temporal component). If gcm or scnario
 ## are NULL, the fxn returns the historical PCA time series for that range.
-getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
+getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL, time_p=NULL) {
   if (is.null(gcm)) { # assume we want historic scores
     res <- hist_score_predictions[[mtn]][[var]] # already read from file
   }
@@ -104,7 +104,16 @@ getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
     res <- readRDS(fname)
     # leave out uneeded projected years
     yrs <- year(res$datet)
-    res <- filter(res, yrs > 1960 & !(yrs %in% 2001:2010 ))
+
+    if(time_p == "ref") {
+      res <- filter(res, yrs > 1960 & yrs < 2001)
+    } else if(time_p == "2020s") {
+      res <- filter(res, yrs >= 2010 & yrs < 2040)
+    } else if(time_p == "2050s") {
+      res <- filter(res, yrs >= 2040 & yrs < 2070)
+    } else if(time_p == "2080s") {
+      res <- filter(res, yrs >= 2070 & yrs < 2100)
+    }
   }
   return(res)
 }
@@ -301,7 +310,9 @@ args <- commandArgs(trailingOnly=TRUE)
 # test data for running interactively:
 # args <- "CM"
 
-# test if there is at least one argument: if not, return an error
+  # test if there is at least one argument: if not, return an error
+print("arguments: ")
+print(args)
 if (length(args)==0) {
   stop("At least one argument must be supplied (input file).\n", call.=FALSE)
 }
@@ -312,13 +323,15 @@ if (length(args)==1) {
   print("Reconstructing historic climate series")
   tgcm <- NULL
   tscenario <- NULL
+  ttime <- NULL
 } else {
   tgcm <- args[2]
   tscenario <- args[3]
+  ttime <- args[4]
 }
 
 # now run the reconstruction
-oname <-  paste(tmtn, tgcm, tscenario, sep="_")
+oname <-  paste(tmtn, tgcm, tscenario, ttime, sep="_")
 print(oname)
 if(is.null(tgcm)) {
   precip <- filter(hist_wx_data, mtn==tmtn)
@@ -327,8 +340,8 @@ if(is.null(tgcm)) {
 }
 
 res <- reconstructTemp(tmtn,
-                       getScorePredictionSeries(tmtn, "tmin", tgcm, tscenario),
-                       getScorePredictionSeries(tmtn, "tmax", tgcm, tscenario),
+                       getScorePredictionSeries(tmtn, "tmin", tgcm, tscenario, ttime),
+                       getScorePredictionSeries(tmtn, "tmax", tgcm, tscenario, ttime),
                        precip)
 
 
@@ -353,36 +366,11 @@ if(is.null(tgcm) ) {
   saveRDS(sum_1961_2000, ofile)
 } else {
   # projected summaries
-    #1961-2000
-  proj <- res %>%  filter(year >= 1961 & year <= 2000) %>%
-    group_by(x,y) %>% select(-year) %>%
+  proj <- res %>% group_by(x,y) %>% select(-year) %>%
     summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_19612000", ".RDS", sep=""))
-  print(paste("Saving:", ofile))
-  saveRDS(proj, ofile)
-  # 2020s, 2050s, and 2080s). So, 2050s is given by the mean of 2040–2069, etc
-  proj <- res %>%  filter(year >= 2010 & year < 2040) %>%
-    group_by(x,y) %>% select(-year) %>%
-    summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_2020s", ".RDS", sep=""))
-  print(paste("Saving:", ofile))
-  saveRDS(proj, ofile)
-
-  # 2050s
-  proj <- res %>%  filter(year >= 2040 & year < 2070) %>%
-    group_by(x,y) %>% select(-year) %>%
-    summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_2050s", ".RDS", sep=""))
-  print(paste("Saving:", ofile))
-  saveRDS(proj, ofile)
-
-  # 2080s
-  proj <- res %>%  filter(year >= 2070 & year < 2100) %>%
-    group_by(x,y) %>% select(-year) %>%
-    summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_2080s", ".RDS", sep=""))
+  ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
   print(paste("Saving:", ofile))
   saveRDS(proj, ofile)
 }
-
+  
 cl.close()
