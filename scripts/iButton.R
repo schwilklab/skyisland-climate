@@ -79,7 +79,7 @@ read.sensor.data <- function(sfiles){
     objs <- mget(sensors)
     stopifnot(length(objs) == length(sensors))
   
-    big_series <- Reduce(function(...) merge(..., all=T), objs)
+    big_series <- Reduce(function(...) merge(..., all=TRUE), objs)
     colnames(big_series) <- sensors
     return(big_series) 
 }

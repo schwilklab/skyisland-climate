@@ -6,10 +6,10 @@
 
 
 # example call:
-# ./reconstruct-climate.R CM CCSM4.r6i1p1 rcp45
+# ./reconstruct-climate.R CM CCSM4.r6i1p1 rcp45 2020s
 
 # will run reconstruction for the Chisos ("CM") the CCSM4.r6i1p GCM and
-# scenario rp45
+# scenario rp45 and for the 2020s time period (2011-2030).
 
 
 
@@ -92,7 +92,7 @@ hist_score_predictions <- readRDS("../results/tempo_mod_results/hist_score_predi
 # ... and future projected:
 ## Fxn to retrieve predicted PCA scores (temporal component). If gcm or scnario
 ## are NULL, the fxn returns the historical PCA time series for that range.
-getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
+getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL, time_p=NULL) {
   if (is.null(gcm)) { # assume we want historic scores
     res <- hist_score_predictions[[mtn]][[var]] # already read from file
   }
@@ -103,7 +103,16 @@ getScorePredictionSeries <- function(mtn, var, gcm=NULL, scenario=NULL) {
     res <- readRDS(fname)
     # leave out uneeded projected years
     yrs <- year(res$datet)
-    res <- filter(res, yrs > 1960 & !(yrs %in% 2001:2010 ))
+
+    if(time_p == "ref") {
+      res <- filter(res, yrs > 1960 & yrs < 2001)
+    } else if(time_p == "2020s") {
+      res <- filter(res, yrs >= 2010 & yrs < 2040)
+    } else if(time_p == "2050s") {
+      res <- filter(res, yrs >= 2040 & yrs < 2070)
+    } else if(time_p == "2080s") {
+      res <- filter(res, yrs >= 2070 & yrs < 2100)
+    }
   }
   return(res)
 }
@@ -164,7 +173,7 @@ testRunExamplePrediction <- function() {
 bioclim <- function(tmin, tmax, precip, datet) {
 
   if (length(datet) < 300) {
-    return(c(rep(NA, 11), year(datet[1])))
+    return(c(rep(NA, 12), year(datet[1])))
   }
 
 
@@ -182,7 +191,8 @@ bioclim <- function(tmin, tmax, precip, datet) {
   monthlies <- data_frame(datet=datet, tmin=tmin, tmax=tmax, prcp=precip, month=month(datet)) %>%
     group_by(month) %>%
     dplyr::summarize(tmin=mean(tmin, na.rm=TRUE), tmax=mean(tmax, na.rm=TRUE),
-              tmean=mean( (tmax+tmin)/2, na.rm=TRUE), prsum = sum(prcp, na.rm=TRUE))
+                     tmean=mean( (tmax+tmin)/2, na.rm=TRUE), mmin= min(tmin, na.rm=TRUE ),
+                     mmax=max(tmax, na.rm=TRUE), prsum = sum(prcp, na.rm=TRUE))
 
   monthlies <- monthlies %>%
     mutate(qtmean = rollmean(x = tmean, 3),
@@ -192,17 +202,22 @@ bioclim <- function(tmin, tmax, precip, datet) {
   BIO1 <- mean( (tmax+tmin)/2, na.rm=TRUE)
   BIO2 <- mean(tmax - tmin, na.rm=TRUE)
   BIO4 <- sd(monthlies$tmean) * 100
-  BIO5 <- max(monthlies$tmax)
-  BIO6 <- min(monthlies$tmin)
+  BIO5 <- monthlies$mmax[which.max(monthlies$tmean)] # max temp in hottest month
+  BIO6 <- monthlies$mmin[which.min(monthlies$tmean)] # min temp of coldest month
   BIO7 <- BIO5-BIO6
   BIO3 <- (BIO2/BIO7) * 100
   BIO8 <- monthlies$qtmean[which.max(monthlies$qpsum)]   # mean temp of wettest q
   BIO9 <- monthlies$qtmean[which.min(monthlies$qpsum)]   # mean temp of driest q
   BIO10 <- max(monthlies$qtmean, na.rm=TRUE)
-  BIO11 <- min(monthlies$qtmean, na.rm=TRUE)       
+  BIO11 <- min(monthlies$qtmean, na.rm=TRUE)
+
+  # and my own:
+  march_may_min <- min(monthlies$mmin[3:5])
+
+  
   year <- year(datet[1])
   
-  return(c(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9, BIO10, BIO11, year))
+  return(c(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9, BIO10, BIO11, march_may_min, year))
 }
 
 
@@ -249,13 +264,13 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
 
   ### TESTING !!!!!
   #temporary: subsample landscape for testing purposes
-  ## tmin_loadings <- filter(tmin_loadings, row_number() <=100)
-  ## tmax_loadings <- filter(tmax_loadings, row_number() <=100)
+  tmin_loadings <- filter(tmin_loadings, row_number() <=100)
+  tmax_loadings <- filter(tmax_loadings, row_number() <=100)
   ## end testing code
 
   nxy <- nrow(tmin_loadings)
   chunk_size=4000
-  res = matrix(, nrow = 1, ncol = 14)
+  res = matrix(, nrow = 1, ncol = 15)  # careful, ahrd coded size, 12 climv ars +x,y and year
   for(chunk in 0:((nxy %/% chunk_size))) {
     start <- chunk*chunk_size
     end   <- min(start+chunk_size-1, nxy)
@@ -284,7 +299,7 @@ reconstructTemp <- function(mtn, tmin_scores, tmax_scores, precip_series) {
   }
 
   colnames(res) <- c("BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7",
-                     "BIO8", "BIO9", "BIO10", "BIO11", "year", "x", "y")
+                     "BIO8", "BIO9", "BIO10", "BIO11", "march_may_min", "year", "x", "y")
   
   return(res[-1,]) # drop first empty row
 }
@@ -301,7 +316,9 @@ args <- commandArgs(trailingOnly=TRUE)
 # test data for running interactively:
 # args <- "CM"
 
-# test if there is at least one argument: if not, return an error
+  # test if there is at least one argument: if not, return an error
+print("arguments: ")
+print(args)
 if (length(args)==0) {
   stop("At least one argument must be supplied (input file).\n", call.=FALSE)
 }
@@ -312,13 +329,15 @@ if (length(args)==1) {
   print("Reconstructing historic climate series")
   tgcm <- NULL
   tscenario <- NULL
+  ttime <- NULL
 } else {
   tgcm <- args[2]
   tscenario <- args[3]
+  ttime <- args[4]
 }
 
 # now run the reconstruction
-oname <-  paste(tmtn, tgcm, tscenario, sep="_")
+oname <-  paste(tmtn, tgcm, tscenario, ttime, sep="_")
 print(oname)
 if(is.null(tgcm)) {
   precip <- filter(hist_wx_data, mtn==tmtn)
@@ -327,8 +346,8 @@ if(is.null(tgcm)) {
 }
 
 res <- reconstructTemp(tmtn,
-                       getScorePredictionSeries(tmtn, "tmin", tgcm, tscenario),
-                       getScorePredictionSeries(tmtn, "tmax", tgcm, tscenario),
+                       getScorePredictionSeries(tmtn, "tmin", tgcm, tscenario, ttime),
+                       getScorePredictionSeries(tmtn, "tmax", tgcm, tscenario, ttime),
                        precip)
 
 
@@ -353,36 +372,11 @@ if(is.null(tgcm) ) {
   saveRDS(sum_1961_2000, ofile)
 } else {
   # projected summaries
-    #1961-2000
-  proj <- res %>%  filter(year >= 1961 & year <= 2000) %>%
-    group_by(x,y) %>% select(-year) %>%
+  proj <- res %>% group_by(x,y) %>% select(-year) %>%
     summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_19612000", ".RDS", sep=""))
-  print(paste("Saving:", ofile))
-  saveRDS(proj, ofile)
-  # 2020s, 2050s, and 2080s). So, 2050s is given by the mean of 2040–2069, etc
-  proj <- res %>%  filter(year >= 2010 & year < 2040) %>%
-    group_by(x,y) %>% select(-year) %>%
-    summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_2020s", ".RDS", sep=""))
-  print(paste("Saving:", ofile))
-  saveRDS(proj, ofile)
-
-  # 2050s
-  proj <- res %>%  filter(year >= 2040 & year < 2070) %>%
-    group_by(x,y) %>% select(-year) %>%
-    summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_2050s", ".RDS", sep=""))
-  print(paste("Saving:", ofile))
-  saveRDS(proj, ofile)
-
-  # 2080s
-  proj <- res %>%  filter(year >= 2070 & year < 2100) %>%
-    group_by(x,y) %>% select(-year) %>%
-    summarize_each(funs(mean))
-  ofile <- file.path(OUT_DIR, paste(oname, "_2080s", ".RDS", sep=""))
+  ofile <- file.path(OUT_DIR, paste(oname, ".RDS", sep=""))
   print(paste("Saving:", ofile))
   saveRDS(proj, ofile)
 }
-
+  
 cl.close()
