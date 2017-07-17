@@ -379,4 +379,4 @@ if(is.null(tgcm) ) {
   saveRDS(proj, ofile)
 }
   
-cl.close()
+stopCluster(CLUSTER)
