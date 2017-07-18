@@ -49,7 +49,7 @@ for mtn in mtns:
     for gcm in gcms:
         for sc in scenarios:
             for tp in timeps :
-                job = "_".join([mtn, gcm, sc, tp]) + "rp"
+                job = "_".join([mtn, gcm, sc, tp]) + "_rp"
                 fname = "qs_" + "_".join([mtn, gcm, sc, tp])
                 f = open(fname, "w")
                 f.write(qsub_lines.format(job, mtn, gcm, sc, tp))
