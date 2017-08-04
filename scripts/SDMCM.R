@@ -1,3 +1,10 @@
+## save script for reference. But DO NOT USE. All SDM code will be moved to
+## CSC-sky-island-forest repo. Thgis script does not run, it refers to
+## nonexistant distirbution files (Feb 2017 versions rather than updated April
+## 2017 versions).
+
+# Base script by H. Poulos
+
 library(plotKML)
 library(sp)
 library(maptools)
