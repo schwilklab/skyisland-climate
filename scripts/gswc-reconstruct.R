@@ -21,14 +21,6 @@ print(sprintf("%d cores detected", no_cores))
 CLUSTER <- makeCluster(no_cores-1, type="FORK")
 
 
-gcms <- c("CCSM4.r6i1p1", "CNRM-CM5.r1i1p1", "CSIRO-Mk3-6-0.r2i1p1",
-        "HadGEM2-CC.r1i1p1", "inmcm4.r1i1p1", "IPSL-CM5A-LR.r1i1p1",
-        "MIROC5.r1i1p1", "MPI-ESM-LR.r1i1p1", "MRI-CGCM3.r1i1p1")
-scenarios <- c("rcp45", "rcp85")
-mtns <- c("CM", "DM", "GM")
-timeps <- c("ref", "2020s", "2050s", "2080s")
-
-
 source("./wx-data.R")
 source("./load_grids.R")
 soilmod <- readRDS("../results/soil/soilmod.RDS")
