@@ -37,8 +37,8 @@ R --slave --args  {1} {2} {3} {4} < ~/projects/skyisland-climate/scripts/gswc-re
 
 # historical
 for mtn in mtns :
-    job = mtn + "_hist"
-    fname = "qs_" + mtn + "_hist"
+    job = "soi" + "_" +  mtn + "_hist"
+    fname = "qsoil_" + mtn + "_hist"
     f = open(fname, "w")
     f.write(qsub_lines.format(job, mtn, "", "", ""))
     f.close()
@@ -49,8 +49,8 @@ for mtn in mtns:
     for gcm in gcms:
         for sc in scenarios:
             for tp in timeps :
-                job = "_".join([mtn, gcm, sc, tp]) + "_rp"
-                fname = "qs_" + "_".join([mtn, gcm, sc, tp])
+                job = "soi" + "_".join([mtn, gcm, sc, tp]) + "_rp"
+                fname = "qsoil_" + "_".join([mtn, gcm, sc, tp])
                 f = open(fname, "w")
                 f.write(qsub_lines.format(job, mtn, gcm, sc, tp))
                 f.close()
