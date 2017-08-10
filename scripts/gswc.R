@@ -2,6 +2,7 @@
 
 library(lubridate)
 library(ggplot2)
+library(dplyr)
 
 source("ggplot-theme.R")
 
@@ -17,7 +18,7 @@ for (s in unique(sensor.soil$sensor)) {
 sensor.soil <- merge(sensor.soil,sensors, all.x=TRUE)
 sensor.soil$date <- mdy(sensor.soil$date)
 
-# calcalute gravimetric soil water content
+# calculate gravimetric soil water content
 GSWC <- function(df) {
     return ( ((df$wb.soil.wet - df$wb) - (df$wb.soil.dry-df$wb)) / (df$wb.soil.dry -df$wb))
 }
@@ -68,3 +69,56 @@ tempsensors[ ! tempsensors %in% s2014]
 
 ## existing data with missing dry weights
 subset(sensor.soil, year == 2014 & is.na(wb.soil.dry))$sensor
+
+
+### model soil moisture:
+
+source("./load_grids.R")
+
+
+soilw <- dplyr::select(sensor.soil, sensor, date, gswc, mtn, lon, lat)
+soilw <- dplyr::filter(soilw, !is.na(gswc))
+sp::coordinates(soilw) <-  ~ lon + lat # converts object to "SpatialPointsDataFrame"
+  #let's be explicit about projections:
+projection(soilw) <- CRS("+proj=longlat +ellps=WGS84") 
+
+soil.all <- list()
+for (m in c("CM", "DM", "GM")) {
+  soil.m <- soilw[soilw$mtn==m,]
+  soil.all[[m]] <- raster::extract(topostacks[[m]], coordinates(soil.m))
+  soil.all[[m]] <- cbind(as.data.frame(soil.m), soil.all[[m]] )
+}
+
+soil.all <- dplyr::bind_rows(soil.all)
+
+
+## wx precip
+source("./wx-data.R")
+library(RcppRoll)
+
+wx <-  hist_wx_data %>% group_by(station, mtn) %>%
+  mutate(rollp = roll_sum(prcp, 30, align = "right", fill=NA))
+wx <- wx %>% dplyr::select(mtn, date = datet, rollp) %>%
+  right_join(soil.all)
+
+
+## xgboost model
+library(caret)
+IND_VAR_NAMES <-  c("rollp", "elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relelev_l", "slope")
+
+ind.vars <- paste(IND_VAR_NAMES, collapse=" + ")
+formula <- as.formula(paste("gswc", " ~ ", ind.vars))
+xgmodel <- train(formula, data = wx, tuneLength = 5, 
+                   method = "xgbTree",metric="RMSE",
+                   trControl = trainControl(method = "cv", number = 5,
+                                            preProc = c("center", "scale"), 
+                                            verboseIter = FALSE))
+
+
+
+modImp <- varImp(xgmodel, scale=TRUE)
+print(modImp)
+
+saveRDS(xgmodel, "../results/soil/soilmod.RDS")
+
+

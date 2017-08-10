@@ -1,4 +1,4 @@
-## wx_data.R.R
+## wx_data.R
 
 ## Provides functions to read historical historic and GCM projected weather station data.
 
