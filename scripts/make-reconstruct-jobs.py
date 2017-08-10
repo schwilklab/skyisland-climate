@@ -54,5 +54,5 @@ for mtn in mtns:
                 f = open(fname, "w")
                 f.write(qsub_lines.format(job, mtn, gcm, sc, tp))
                 f.close()
-                #            subprocess.Popen("qsub " + fname)
+#                subprocess.Popen("qsub " + fname)
 
