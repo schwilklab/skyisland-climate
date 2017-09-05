@@ -21,7 +21,9 @@ CLUSTER <- makeCluster(no_cores-1, type="FORK")
 
 
 source("./wx-data.R")
-source("./load_grids.R")
+#source("./load_grids.R") # depends on rgdal, avoid. Instead:
+topodfs <- readRDS("../results/tempdata/topodfs.rds")
+
 soilmod <- readRDS("../results/soil/soilmod.RDS")
 
 

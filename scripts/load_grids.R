@@ -47,3 +47,8 @@ topodfs <- list()
 topodfs[["CM"]] <- data.frame(rasterToPoints(topostacks[["CM"]]))
 topodfs[["DM"]] <- data.frame(rasterToPoints(topostacks[["DM"]]))
 topodfs[["GM"]] <- data.frame(rasterToPoints(topostacks[["GM"]]))
+
+# save the topodfs object
+
+saveRDS(topodfs, file.path(DATA_CACHE_DIR, "topodfs.rds") )
+
