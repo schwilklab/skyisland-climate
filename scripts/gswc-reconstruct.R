@@ -53,7 +53,7 @@ myrollsum <- function(x, k, fill, align = c("center", "left", "right"), ...) {
   rval <- cumsum(y)
 
   x[ix] <- rval
-  x[!ix] <- NA
+  x[-ix] <- NA
   return(x)
 }
 
