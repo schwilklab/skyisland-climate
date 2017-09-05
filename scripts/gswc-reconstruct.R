@@ -64,7 +64,9 @@ summarizeChunk <- function(topo_chunk, the_wx, smod = soilmod) {
   expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...))
   df <- expand.grid.df(topo_chunk, the_wx)
   df$gswc <- predict(smod, newdata=df, na.action=na.pass)
-  df <- df %>% dplyr::group_by(x,y) %>% dplyr::summarize(gswc = mean(gswc))
+  #  df <- aggregate(df["gswc"], by=df[c("x", "y")], FUN= mean) slow!
+  df <- dplyr::group_by(df, x,y)
+  df <- dplyr::summarize(df, gswc = mean(gswc))
   return(df)
 }
 
@@ -90,15 +92,16 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
                                            year(datet) >= 2070 & year(datet) < 2100)
   }
 
-  thewx <- thewx %>% dplyr::mutate(rollp = myrollsum(prcp, 30, align = "right", fill=NA)) %>%
-    dplyr::select(date, rollp)
-
+  rollprecip <- myrollsum(thewx$prcp, 30, align = "right", fill=NA)
+  rollp_wx <- data.frame(date=thewx$date, rollp=rollprecip)  
 
   thetopo <-   topodfs[[themtn]]
-  # thetopo <- thetopo[1:500,]  # testing
+  ## BEGIN_TESTING
+  #thetopo <- thetopo[1:500,]  # testing
+  ## END_TESTING
   idx   <- splitIndices(nrow(thetopo), 200)
   topolist <- lapply(idx, function(ii) thetopo[ii,,drop=FALSE])
-  ans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=thewx)
+  ans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=rollp_wx, smod=soilmod)
   return(do.call(rbind, ans))
 }
 
@@ -111,7 +114,7 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
 args <- commandArgs(trailingOnly=TRUE)
 
 # test data for running interactively:
-# args <- "CM"
+#args <- c("CM", "CCSM4.r6i1p1", "rcp45", "2020s" )
 
   # test if there is at least one argument: if not, return an error
 print("arguments: ")
@@ -139,7 +142,7 @@ print(oname)
 res <- makeGSWCdf(tmtn, tgcm, tscenario, ttime)
 
 # save files snapshots
-res <- res %>% as_tibble() %>% filter(complete.cases(.))
+res <- res[complete.cases(res),]
 
 # historical
 if(is.null(tgcm) ) {
