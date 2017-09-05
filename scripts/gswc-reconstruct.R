@@ -151,7 +151,7 @@ if (length(args)==1) {
 # now run the reconstruction
 oname <-  paste(tmtn, tgcm, tscenario, ttime, sep="_")
 print(oname)
-res <- makeGSWCdf(tmtn, tgcm tscenario, ttime)
+res <- makeGSWCdf(tmtn, tgcm, tscenario, ttime)
 
 # save files snapshots
 res <- res %>% as_tibble() %>% filter(complete.cases(.))
