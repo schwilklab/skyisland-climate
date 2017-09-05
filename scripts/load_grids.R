@@ -3,7 +3,7 @@
 ## data exported (loaded into global namespace) as "topostack", a RasterStack
 ## object (from package 'raster'). requires packages raster, maptools
 library(raster)
-library(maptools)
+#library(maptools)
 
 source("./data-cache.R") # for get_data() function
 
