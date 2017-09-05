@@ -87,19 +87,19 @@ summarizeChunk <- function(topo_chunk, the_wx, smod = soilmod) {
 makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
   if (is.null(thegcm)) { # historical
     thewx <- dplyr::filter(hist_wx_data, mtn==themtn & yr > 1960 & yr < 2001)
-  } else if (timep == "ref") {
+  } else if (thetimep == "ref") {
     thewx <- dplyr::filter(proj_wx_data, mtn==themtn & gcm == thegcm &
                                            scenario == thescenario &
                                            yr > 1960 & yr < 2001)
-  } else if (timep == "2020s") {
+  } else if (thetimep == "2020s") {
     thewx <- dplyr::filter(proj_wx_data, mtn==themtn & gcm == thegcm &
                                            scenario == thescenario &
                                            year(datet) >= 2010 & year(datet) < 2040)
-  } else if (timep == "2050s") {
+  } else if (thetimep == "2050s") {
     thewx <- dplyr::filter(proj_wx_data, mtn==themtn & gcm == thegcm &
                                            scenario == thescenario &
                                            year(datet) >= 2040 & year(datet) < 2070)
-  } else if (timep == "2080s") {
+  } else if (thetimep == "2080s") {
     thewx <- dplyr::filter(proj_wx_data, mtn==themtn & gcm == thegcm &
                                            scenario == thescenario &
                                            year(datet) >= 2070 & year(datet) < 2100)
