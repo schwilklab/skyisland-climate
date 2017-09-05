@@ -99,7 +99,7 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
   ## BEGIN_TESTING
   #thetopo <- thetopo[1:500,]  # testing
   ## END_TESTING
-  idx   <- splitIndices(nrow(thetopo), 100)
+  idx   <- splitIndices(nrow(thetopo), 200)
   topolist <- lapply(idx, function(ii) thetopo[ii,,drop=FALSE])
   ans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=rollp_wx, smod=soilmod)
   return(do.call(rbind, ans))
