@@ -99,7 +99,7 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
   ## BEGIN_TESTING
   #thetopo <- thetopo[1:500,]  # testing
   ## END_TESTING
-  idx   <- splitIndices(nrow(thetopo), 200)
+  idx   <- splitIndices(nrow(thetopo), 100)
   topolist <- lapply(idx, function(ii) thetopo[ii,,drop=FALSE])
   ans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=rollp_wx, smod=soilmod)
   return(do.call(rbind, ans))
@@ -116,7 +116,7 @@ args <- commandArgs(trailingOnly=TRUE)
 # test data for running interactively:
 #args <- c("CM", "CCSM4.r6i1p1", "rcp45", "2020s" )
 
-  # test if there is at least one argument: if not, return an error
+# Check if there is at least one argument: if not, return an error
 print("arguments: ")
 print(args)
 if (length(args)==0) {
