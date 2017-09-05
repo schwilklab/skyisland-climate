@@ -1,0 +1,2 @@
+# ignore qsub batch files created by python scripts
+qs_*
