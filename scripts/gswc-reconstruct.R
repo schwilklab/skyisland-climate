@@ -35,23 +35,8 @@ proj_wx_data <- dplyr::mutate(proj_wx_data, date = datet, yr = year(datet))
 
 
 
-myrollsum <- function(x, k, fill = if (na.pad) NA, na.pad = FALSE, 
-	align = c("center", "left", "right"), ...) {
-
-  if (!missing(na.pad)) warning("na.pad is deprecated. Use fill.")
-
+myrollsum <- function(x, k, fill, align = c("center", "left", "right"), ...) {
   align <- match.arg(align)
-
-  ## if (length(dim(x)) == 2) {
-  ##     # merge is the only zoo specific part of this method
-	  
-  ##     out <- do.call("merge", c(lapply(1:NCOL(x), function(i) {
-  ##   	rollsum(x[, i, drop = TRUE], k, fill = fill, align = align, ...)
-  ##     }), all = FALSE))
-  ##     if (ncol(x) == 1) dim(out) <- c(length(out), 1)
-  ##     colnames(out) <- colnames(x)
-  ##     return(out)
-  ## }
 
   n <- length(x)
   stopifnot(k <= n)
@@ -68,8 +53,8 @@ myrollsum <- function(x, k, fill = if (na.pad) NA, na.pad = FALSE,
   rval <- cumsum(y)
 
   x[ix] <- rval
-  na.fill(x, fill = fill, ix)
-
+  x[!ix] <- NA
+  return(x)
 }
 
 
