@@ -5,7 +5,7 @@
 ## reconstructions in parallel
 
 
-## reconstruct across historical and porjected time series and landscapes:
+## reconstruct across historical and projected time series and landscapes:
 
 
 library(parallel)
@@ -25,6 +25,9 @@ topodfs <- readRDS("../results/tempdata/topodfs.rds")
 
 soilmod <- readRDS("../results/soil/soilmod.RDS")
 
+
+# time period of interest:
+# For now, whole year.
 
 
 hist_wx_data <- dplyr::mutate(hist_wx_data, date = datet, yr = year(datet))
@@ -91,6 +94,7 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
                                            year(datet) >= 2070 & year(datet) < 2100)
   }
 
+  # monthly rolling average
   rollprecip <- myrollsum(thewx$prcp, 30, align = "right", fill=NA)
   rollp_wx <- data.frame(date=thewx$date, rollp=rollprecip)  
 
