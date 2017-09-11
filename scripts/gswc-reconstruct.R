@@ -105,14 +105,14 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
   ## END_TESTING
 
   nxy <- nrow(thetopo)
-  chunk_size=5700
+  chunk_size=7000
   print("Starting clusterApply() on topo chunks.")
   res <- NULL
   for(chunk in 0:((nxy %/% chunk_size))) {
     start <- chunk*chunk_size
     end   <- min(start+chunk_size-1, nxy)
     topo_chunk <- thetopo[start:end,]
-    idx   <- splitIndices(nrow(topo_chunk), 300)
+    idx   <- splitIndices(nrow(topo_chunk), 200)
     topolist <- lapply(idx, function(ii) topo_chunk[ii,,drop=FALSE])
     print(paste("clusterApply on chunk ", chunk+1, " of ", (nxy %/% chunk_size) + 1, sep=""))
     chunkans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=rollp_wx, smod=soilmod)
