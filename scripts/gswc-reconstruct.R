@@ -96,18 +96,30 @@ makeGSWCdf <- function(themtn, thegcm=NULL, thescenario=NULL, thetimep=NULL) {
 
   # monthly rolling average
   rollprecip <- myrollsum(thewx$prcp, 30, align = "right", fill=NA)
-  rollp_wx <- data.frame(date=thewx$date, rollp=rollprecip)  
+  rollp_wx <- data.frame(date=thewx$date, rollp=rollprecip)
+  rm(thewx)
 
   thetopo <-   topodfs[[themtn]]
   ## BEGIN_TESTING
-  # thetopo <- thetopo[1:1000,]  # testing
+  #thetopo <- thetopo[1:5000,]  # testing
   ## END_TESTING
-  idx   <- splitIndices(nrow(thetopo), 700)
-  topolist <- lapply(idx, function(ii) thetopo[ii,,drop=FALSE])
-  ans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=rollp_wx, smod=soilmod)
-  return(do.call(rbind, ans))
-}
 
+  nxy <- nrow(thetopo)
+  chunk_size=5700
+  print("Starting clusterApply() on topo chunks.")
+  res <- NULL
+  for(chunk in 0:((nxy %/% chunk_size))) {
+    start <- chunk*chunk_size
+    end   <- min(start+chunk_size-1, nxy)
+    topo_chunk <- thetopo[start:end,]
+    idx   <- splitIndices(nrow(topo_chunk), 300)
+    topolist <- lapply(idx, function(ii) topo_chunk[ii,,drop=FALSE])
+    print(paste("clusterApply on chunk ", chunk+1, " of ", (nxy %/% chunk_size) + 1, sep=""))
+    chunkans   <- clusterApply(CLUSTER, topolist, summarizeChunk, the_wx=rollp_wx, smod=soilmod)
+    res  <- rbind(res, do.call(rbind, chunkans))
+  }
+  return(res)
+}
 
 
 #### MAIN COMMAND LINE SCRIPT ###
