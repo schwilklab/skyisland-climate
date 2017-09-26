@@ -197,4 +197,3 @@ ggplot(data = subset(temp.daily.sum, sensor == "GP612" & datet > mdy("01-01-2014
 diff <- merge(subset(temp.daily.sum, sensor == "GP612"), subset(temp.daily.sum, sensor == "GP610"), by = "datet")
 
 ggplot(data = subset(diff, as.POSIXct(datet) > mdy("10-01-2014")), aes(datet, min.x - min.y)) + geom_line()
-
