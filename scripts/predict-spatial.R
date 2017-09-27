@@ -39,7 +39,7 @@ makeMap <- function(topolayer) {
     map <- data.frame(map)
     names(map) <- c("x", "y", "var")
     ggplot(map, aes(x,y, fill=var)) +
-      geom_raster() + xlab("Latitude") + ylab("Longitude")
+      geom_raster() + ylab("Latitude") + xlab("Longitude")
 }
 
 # Just a quick and dirty check of most important pairwise correlations Just
