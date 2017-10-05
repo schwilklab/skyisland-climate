@@ -1,0 +1,7 @@
+variable,type,unit,definition
+datet,date,,date of measurement
+sensor,character,,sensor ID
+tmin,numeric,celsius,Daily minimum temperature
+tmax,numeric,celsius,Daily maximum temperature
+tmean,numeric,celsius,Daily mean temperature
+dtr,numeric,celsius,Daily temperature range (tmax – tmin)

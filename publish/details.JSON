@@ -1,0 +1,64 @@
+{
+  "creator":{
+      "Dylan":{
+          "name": "Dylan Schwilk",
+          "email": "dylan.schwilk@ttu.edu",
+          "phone": "806 834-0902",
+          "organization": "Texas Tech University",
+          "address": "Biological Sciences",
+          "city": "Lubbock",
+          "state": "Texas",
+          "postalCode": "79409-3131",
+          "country": "USA"
+      }
+  },
+    "associatedParty":{
+        "Helen":{
+            "name": "Helen Poulos",
+            "email": "hpoulos@wesleyan.edu",
+            "phone": "806",
+            "organization": "Wesleyan University",
+            "address": "Environmental Studies",
+            "city": "Middletown",
+            "state": "CT",
+            "postalCode": "06459",
+            "country": "USA"
+        }
+    },
+    "intro_statement": "Data associated with South-Central Climate Science Center grant to D. Schwilk",
+     "publication":{
+    "date": "2017",
+    "title": "Final Report: Predicting Sky Island Forest Vulnerability to Climate Change",
+    "citation": "Schwilk, D.W. Predicting Sky Island Forest Vulnerability to Climate Change, FInal Report to South-Central Climate Science Center. 2017",
+         "keywords":  ["climate change", "microclimate", "cold air drainage", "trees", "Sky Island"],
+    "abstract": "The Sky Island forests of the southwestern United States comprise one of the most diverse temperate forest ecosystems in the world. Climate is a major driver of vegetation patterns across the Southwest and it is likely that this region will face a hotter climate in the future with significant drying particularly in spring. Simple models of plant response to warming climates predict vegetation moving to cooler and wetter locations (“marching upslope”). However, the mechanisms explaining species-specific responses to changes in temperature and water availability are much more complex. Nighttime lows and daytime high temperatures vary both in relation to elevation and topography, and water availability does not uniformly increase with elevation. We took detailed microclimate measurements across three mountain ranges in West Texas to identify key topographical drivers of microclimate variation, and modeled future fine scale climate as a function of topography and projected regional weather across multiple future scenarios. We combined these fine scale climate data (past measured and future projected) with measurement of physiological traits related to drought tolerance to predict where suitable habitat for important southwestern tree species will occur under near future climates. We found that local topography had strong effects on air temperature and on soil moisture such that the cooler, wetter locations were not always at the highest elevations. This result suggests that topographically controlled microclimate might mitigate some habitat loss even under a warming climate. Furthermore, we demonstrated that, for the common oaks in these mountain ranges, fire may interact with drought because post-fire oak resprouts produce more drought-susceptible tissue than do pre-fire adults. This is an important finding because fire frequency is likely to increase under a future hotter and drier climate in this region."
+},
+    "rights": "This dataset is released to the public under the Creative Commons CC0 license. As such, it may be freely used and redistributed.",
+    "coverage": {
+        "dates": ["1960-01-01", "20100-12-31"],
+        "scientific_names": "",
+        "geographic_description":"The study was carried out in three mountain ranges in West Texas, USA: the Chisos Mountains, the Davis Mountains, and the Guadalupe Mountains",
+        "locations": {
+            "Chisos Mountains, Big Bend National Park": [29.25, -103.25],
+            "Davis Mountains, The Nature Conservancy Preserve": [30.633333, -104.166667],
+            "Guadalupe Mountains, Guadalupe Mountains National Park": [31.916667, -104.866667]
+        }
+    },
+
+    "files":{
+    "sensors":{
+      "path": "./export/sensors/sensors.csv",
+      "description": "Location and placement notes on each iButton temperature sensor in the microclimate project",
+      "metadata": "../microclimate/sensors-metadata.csv",
+      "contact": "Dylan Schwilk"
+    },
+    "temperature-daily-summary":{
+      "path": "./export/sensors/temperature-daily-summaries.csv",
+      "description": "Inidividual-level measuremnts of branch biomass taken from terminal meter of stem",
+      "metadata": "./temperature-daily-summaries-metadata.csv",
+      "contact": "Dylan Schwilk"
+    }
+},  
+    "methods_file": "sensors-methods.md"
+  }
+}
