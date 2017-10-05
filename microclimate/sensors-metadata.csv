@@ -1,13 +1,13 @@
-variable,type,units,description
-sensor,string,,Sensor ID: Two letters and three digits. The first two letters indicate the trail or area.
-type,string,,'T' or 'H'  For temperature or humidity
-mtn,string,,"Mountain range. 'CM': Chisos Mountains, 'DM': Davis Mountains, 'GM': Guadalupe Mountains"
-gone,boolean,,"1: sensors has been removed, 0 or blank sensor is still present"
-pair,string,,Each humidity sensors has a paired temperature sensor.  This is the id of the pair (it can be paired with itself)
-lat,numeric,degrees,Latitude of sensor in decimal degrees
-lon,numeric,degrees,Longitude of sensor in decimal degrees
-elev,numeric,m,Elevation in meters (according to GPS)
-asp,string,,Notes on estimated aspect
-asp2,numeric,degrees,Aspect in degrees
-slopepos,string,,Notes on relative slope position
-note,string,,Notes on location such as species of tree sensor is in
+variable,type,unit,definition
+sensor,character,,Sensor ID: Two letters and three digits. The first two letters indicate the trail or area.
+type,character,,'T' or 'H'  For temperature or humidity
+mtn,character,,"Mountain range. 'CM': Chisos Mountains, 'DM': Davis Mountains, 'GM': Guadalupe Mountains"
+gone,bool,,"1: sensors has been removed, 0 or blank sensor is still present"
+pair,character,,Each humidity sensors has a paired temperature sensor.  This is the id of the pair (it can be paired with itself)
+lat,numeric,degree,"Latitude of sensor in decimal degrees, WGS84"
+lon,numeric,degree,"Longitude of sensor in decimal degrees, WGS84"
+elev,numeric,meter,Elevation in meters (according to GPS)
+asp,character,,Notes on estimated aspect
+asp2,numeric,degree,Aspect in degrees
+slopepos,character,,Notes on relative slope position
+note,character,,Notes on location such as species of tree sensor is in
