@@ -1,0 +1,11 @@
+model,code,institution
+CCSM4,CCSM4.r6i1p1,"National Center for Atmospheric Research, USA"
+CNRM-CM5,CNRM-CM5.r1i1p1,"Centre National de Recherches Meteorologiques, Meteo-France, France"
+CSIRO-Mk3.6.0,CSIRO-Mk3-6-0.r2i1p1,"Commonwealth Scientific and Industrial
+Research Organization (CSIRO), Australia"
+HadGEM2_CC,HadGEM2-CC.r1i1p1,"Met Office Hadley Centre, UK"
+INM-CM4,inmcm4.r1i1p1,"Institute for Numerical Mathematics, Russia"
+IPSL-CM5A-LR,IPSL-CM5A-LR.r1i1p1,"Institut Pierre-Simon Laplace, France"
+MIROC5,MIROC5.r1i1p1,"Atmosphere and Ocean Research Institute (The University of Tokyo), National Institute for Environmental Studies and Japan Agency for Marine-Earth Science and Technology"
+MPI-ESM-LR,MPI-ESM-LR.r1i1p1,"Max Planck Institute for Meteorology, Germany"
+MRI-CGCM3,MRI-CGCM3.r1i1p1,"Meteorological Research Institute, Japan"

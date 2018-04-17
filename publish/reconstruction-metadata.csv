@@ -1,0 +1,20 @@
+variable,type,unit,definition
+x,numeric,degree,Longitude of raster cell center in decimal degrees WGS84
+y,numeric,degree,Latitude of raster cell center in decimal degrees WGS84
+BIO1,numeric,celsius,Annual Mean Temperature
+BIO2,numeric,celsius,Mean Diurnal Range (Mean of monthly (max temp - min temp))
+BIO3,numeric,dimensionless,Isothermality (BIO2/BIO7) (* 100)
+BIO4,numeric,dimensionless,Temperature Seasonality (standard deviation *100)
+BIO5,numeric,celsius,Max Temperature of Warmest Month
+BIO6,numeric,celsius,Min Temperature of Coldest Month
+BIO7,numeric,celsius,Temperature Annual Range (BIO5-BIO6)
+BIO8,numeric,celsius,Mean Temperature of Wettest Quarter
+BIO9,numeric,celsius,Mean Temperature of Driest Quarter
+BIO10,numeric,celsius,Mean Temperature of Warmest Quarter
+BIO11,numeric,celsius,Mean Temperature of Coldest Quarter
+march_may_min,numeric,celsius,Mean minimum temperature March 1 to May 31
+gswc,number,dimensionless,Reconstructed mean gravimetric soil water content
+mtn,character,,Mountain range for which reconstruction applies. Encoded as first element in underscore delimited file name.
+gcm,character,,CMIP5 earth system model projection on which reconstruction is based. Encoded as second element in underscore delimited file name.
+scenario,character,,"CMIP5 scenario, rcp45 or rcp85"
+time_period,character,,30-year time period over which climate was summarized
