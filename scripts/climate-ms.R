@@ -5,6 +5,7 @@ library(raster)
 library(rgdal)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 
 gcms  <-  c("CCSM4.r6i1p1", "CNRM-CM5.r1i1p1", "CSIRO-Mk3-6-0.r2i1p1",
         "HadGEM2-CC.r1i1p1", "inmcm4.r1i1p1", "IPSL-CM5A-LR.r1i1p1",
