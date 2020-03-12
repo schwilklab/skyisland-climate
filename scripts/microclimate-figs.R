@@ -79,26 +79,27 @@ jan_feb <- temp.monthly.sum %>% filter(jan2feb(month)) %>%
 #jan_feb <- subset(temp.monthly.sum, jan2feb(temp.monthly.sum$month))
 #jan_feb <- ddply(jan_feb, .(year, mtn,elev), summarize, sumfreezes = sum(nfreezes,na.rm=TRUE), meanfreezes = mean(nfreezes,na.rm=TRUE), avemin = mean(mtmin))
 
-qplot(elev, meanfreezes, data=jan_march, color=mtn) +
+qplot(elev, sumfreezes, data=jan_march, color=mtn) +
     facet_grid( year ~ .,scales="free") +
     scale_x_continuous("Elevation (m)") +
-    scale_y_continuous("Mean Number of freezing events Jan-March") +
+    scale_y_continuous("Number of freezing events Jan-March") +
     geom_smooth()
 
 
 ## sum freezes jan2march by mtn range
-ggplot(jan_march, aes(elev, meanfreezes, color=factor(year))) +
-    geom_point() +
+ggplot(filter(jan_march, year!=2011 & year < 2015), aes(elev, sumfreezes, color=factor(year))) +
+    geom_jitter() +
     facet_grid( mtn ~ .) +
     scale_x_continuous("Elevation (m)") +
-    scale_y_continuous("Number of freezing nights Jan-March") +
+  scale_y_continuous("Number of freezing nights Jan-March") +
+   labs(color="Year") +
     geom_smooth(se=FALSE, size=1) +
     pubtheme
-ggsave(file.path(plot_output, "nfreezes-jan-march.pdf"),  width=col2, units="cm")
+ggsave(file.path(plot_output, "sum_freezes-jan-march.pdf"),  width=col2, units="cm")
 
 
 ## sum freezes jan2march for DM
-ggplot(subset(jan_march, mtn=="DM"), aes(elev, meanfreezes, color=factor(year))) +
+ggplot(subset(jan_march, mtn=="DM"), aes(elev, meanfreezes*3, color=factor(year))) +
     geom_point() +
     scale_x_continuous("Elevation (m)") +
     scale_y_continuous("Number of freezing nights Jan-March") +
