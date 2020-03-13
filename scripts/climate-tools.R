@@ -69,10 +69,12 @@ build_climate_df <- function(mtn) {
 export_gtiff_reconstruction <- function(mtn, gcm=NULL, scenario=NULL, timep=NULL) {
   reconstruction <- retrieve_reconstruction_df(mtn, gcm, scenario, timep)
   reconstruction <- clim_data_2_brick(reconstruction)
-  writeRaster(CM, file.path(BIOCLIM_RECS_DIR, paste(mtn, gcm, scenario, timep, sep="_")),
+  writeRaster(reconstruction,
+              file.path(BIOCLIM_RECS_DIR, paste(mtn, gcm, scenario, timep, sep="_")),
               bylayer=FALSE, format="GTiff")
   return()
 }
 
 # example":
-# export_gtiff_reconstruction("GM")
+
+export_gtiff_reconstruction("CM")
