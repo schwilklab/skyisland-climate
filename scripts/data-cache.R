@@ -20,7 +20,7 @@ library(lubridate)
 #    time: time to check against.
 #    func: Function to call if dfile modification time is older than time
 #    ...: additional arguments handed to func.
-get_data <- function(dfile, time, func, ...) {
+get_data <- function(dfile, time, func, force=FALSE,...) {
     data.time <- ymd_hms("1900-01-01 1:00:00 UTC") # earlier than any data in
                                                    # case file does not even
                                                    # exist, below
@@ -28,7 +28,7 @@ get_data <- function(dfile, time, func, ...) {
         data.time <- ymd_hms(file.info(dfile)$mtime)
     }
 
-    if (time > data.time) {
+    if (force | time > data.time) {
         dots <- list(...) 
         res <- do.call(func, dots)
         saveRDS(res, file = dfile)

@@ -20,7 +20,7 @@ PROJ_STRING <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 library(ggplot2)
 library(tidyr)
-#library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
+library(pcaMethods) # see http://www.bioconductor.org/packages/release/bioc/html/pcaMethods.html
 library(dplyr)
 
 extractVals1Mtn <- function(themtn, topostacks) {
@@ -62,13 +62,13 @@ runPCA <- function(wdata, minlength=1100, nPC = 3) {
    # Throw out rows in which all elements are NA:
    df <- df[rowSums(is.na(df[,-1])) != ncol(df[,-1]),]
    ## Run PCA
-  df.PCA <- pca(df[,-1], nPcs=nPC, method="ppca", center=FALSE, maxIterations=4000)
+   df.PCA <- pca(df[,-1], nPcs=nPC, method="ppca", center=FALSE, maxIterations=4000)
    # merge scores back with dates to run time series analysis:
    scores <- cbind(data.frame(datet=df$datet), as.data.frame(scores(df.PCA)))
    loadings <- as.data.frame(loadings(df.PCA))
    loadings$sensor <- rownames(loadings)
    loadings <- merge(sensors.topo, loadings, by = c("sensor"))
-   return(list(scores = scores, loadings = loadings))
+   return(list(mod= df.PCA, scores = scores, loadings = loadings))
 }
 
 
@@ -111,15 +111,15 @@ loadPCAData <- function(force=FALSE) {
     dailysum <- temp.daily.sum %>% merge(dplyr::select(sensors, sensor, mtn))
 
     # note grid timestamps are read from .asc files in load_grids.R
-    DM.PCA <- get_data(DM.PCA.file, GRID_TIMESTAMP_DM, loadPCAData.mtn,
+    DM.PCA <- get_data(DM.PCA.file, GRID_TIMESTAMP_DM, loadPCAData.mtn, force,
                        themtn = "DM", dailysum = dailysum)
-    CM.PCA <- get_data(CM.PCA.file, GRID_TIMESTAMP_CM, loadPCAData.mtn,
+    CM.PCA <- get_data(CM.PCA.file, GRID_TIMESTAMP_CM, loadPCAData.mtn, force, 
                        themtn = "CM", dailysum = dailysum)
-    GM.PCA <- get_data(GM.PCA.file, GRID_TIMESTAMP_GM, loadPCAData.mtn,
+    GM.PCA <- get_data(GM.PCA.file, GRID_TIMESTAMP_GM, loadPCAData.mtn, force,
                        themtn = "GM", dailysum = dailysum)
 
     return(list("DM" = DM.PCA, "CM" = CM.PCA, "GM" = GM.PCA))
 }
 
 # load it
-PCAs <- loadPCAData()
+PCAs <- loadPCAData(force=false)

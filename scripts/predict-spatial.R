@@ -21,13 +21,14 @@ TOPO_RES_DIR <- "../results/topo_mod_results/"
 
 IND_VAR_NAMES <-  c("elev","ldist_ridge" , "ldist_valley",  "msd", "radiation","relelev_l", "slope")
 
+library(randomForest)
 library(caret)
 library(sp)
 library(dplyr)
-## library(doMC)  # caret will use if loaded
-## registerDoMC(cores=7)
+#library(doMC)  # caret will use if loaded
+#registerDoMC(cores=7)
 
-#library(xgboost) # not used?
+library(xgboost) 
 
 DO_PAIR_PLOTS <- FALSE
 if (require (GGally) ) DO_PAIR_PLOTS <- TRUE # for ggpairs() # may not be
@@ -109,11 +110,11 @@ fitboost <- function(df, dep.var) {
 fitModelRunDiagnostics <- function(mtn, dep.var, axis) {
   print(paste(mtn, dep.var, axis))
 
-  ## # fit an RF model and save it
+  ## fit an RF model and save it
   print("Fitting RF model")
   modrf <- fitRandomForest(PCAs[[mtn]][[dep.var]]$loadings, axis)
   saveRDS(modrf, file.path(TOPO_RES_DIR,
-  ##                          paste(mtn, "_", v, "_", axis, "_", "RF", ".RDS", sep="")))
+                           paste(mtn, "_", v, "_", axis, "_", "RF", ".RDS", sep="")))
 
   # do the same with a boost model
   print("Fitting BOOST model")
@@ -192,77 +193,83 @@ saveRDS(load.predictions, file.path(TOPO_RES_DIR, "load_predictions.RDS"))
 
 
 ## ###############################################################################
-## ## DM TMIN
+## ## Build models, predict rasters of PCA loadings
 ## ###############################################################################
 
 ## If we want to split into training and testing data:
 ## DM.tmin <- splitdf(PCAs[["DM"]][["tmin"]]$loadings)
 
-DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
-DM.tmin.mod <- fitRandomForest(DM.tmin, "PC1")
-DM.tmin.mod
-## what are the important variables (via permutation)
-#varImpPlot(DM.tmin.mod, type=1)
-
-## Make the predicted loading surface
-DM.tmin.predPC1 <- raster::predict(topostacks[["DM"]], DM.tmin.mod)
-makeMap(DM.tmin.predPC1) +  guides(fill=guide_legend(title="PC1"))
-ggsave("../results/topo_mod_results/DM-PC1.png", height=10, width=10)
-
-## raster::writeRaster(DM.tmin.predPC1, file=file.path(data_output, "predPC1_tmin.tif"),
-##             overwrite=TRUE)
-
-
-#DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
-DM.tmin.mod <- fitboost(DM.tmin, "PC2")
-DM.tmin.mod
-## what are the important variables (via permutation)
-#varImpPlot(DM.tmin.mod, type=1)
-
-## Make the predicted loading surface
-DM.tmin.predPC2 <- raster::predict(topostacks[["DM"]], DM.tmin.mod)
-makeMap(DM.tmin.predPC2) +  guides(fill=guide_legend(title="PC2"))
-ggsave("../results/topo_mod_results/DM-PC2.png", height=10, width=10)
-
-
-CM.tmin <- PCAs[["CM"]][["tmin"]]$loadings
-CM.tmin.mod <- fitboost(CM.tmin, "PC1")
-CM.tmin.mod
-#varImpPlot(CM.tmin.mod, type=1)
-
-## Make the predicted loading surface
-CM.tmin.predPC1 <- raster::predict(topostacks[["CM"]], CM.tmin.mod)
-makeMap(CM.tmin.predPC1) +  guides(fill=guide_legend(title="PC1"))
-ggsave("../results/topo_mod_results/CM-PC1.png", height=10, width=10)
-
-
-#DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
-CM.tmin.mod <- fitboost(CM.tmin, "PC2")
-CM.tmin.mod
-CM.tmin.predPC2 <- raster::predict(topostacks[["CM"]], DM.tmin.mod)
-makeMap(CM.tmin.predPC2) +  guides(fill=guide_legend(title="PC2"))
-ggsave("../results/topo_mod_results/CM-PC2.png", height=10, width=10)
 
 
 
+## DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
+## DM.tmin.mod <- fitBoost(DM.tmin, "PC1")
+## DM.tmin.mod
 
-GM.tmin <- PCAs[["GM"]][["tmin"]]$loadings
-GM.tmin.mod <- fitboost(GM.tmin, "PC1")
-GM.tmin.mod
-#varImpPlot(GM.tmin.mod, type=1)
-
-## Make the predicted loading surface
-GM.tmin.predPC1 <- raster::predict(topostacks[["GM"]], GM.tmin.mod)
-makeMap(GM.tmin.predPC1) +  guides(fill=guide_legend(title="PC1"))
-ggsave("../results/topo_mod_results/GM-PC1.png", height=10, width=10)
+## ## Make the predicted loading surface
+## DM.tmin.predPC1 <- raster::predict(topostacks[["DM"]], DM.tmin.mod)
+## makeMap(DM.tmin.predPC1) +  guides(fill=guide_legend(title="PC1"))
+## ggsave("../results/topo_mod_results/DM-PC1.png", height=10, width=10)
+## raster::writeRaster(DM.tmin.predPC1, file=file.path(data_output, "DM_predPC1_tmin.tif"),
+##              overwrite=TRUE)
 
 
-#DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
-GM.tmin.mod <- fitboost(GM.tmin, "PC2")
-GM.tmin.mod
-GM.tmin.predPC2 <- raster::predict(topostacks[["GM"]], DM.tmin.mod)
-makeMap(GM.tmin.predPC2) +  guides(fill=guide_legend(title="PC2"))
-ggsave("../results/topo_mod_results/GM-PC2.png", height=10, width=10)
+## #DM.tmin <- PCAs[["DM"]][["tmin"]]$loadings
+## DM.tmin.mod <- fitboost(DM.tmin, "PC2")
+## DM.tmin.mod
+## ## what are the important variables (via permutation)
+## #varImpPlot(DM.tmin.mod, type=1)
+
+## ## Make the predicted loading surface
+## DM.tmin.predPC2 <- raster::predict(topostacks[["DM"]], DM.tmin.mod)
+## makeMap(DM.tmin.predPC2) +  guides(fill=guide_legend(title="PC2"))
+## ggsave("../results/topo_mod_results/DM-PC2.png", height=10, width=10)
+## raster::writeRaster(DM.tmin.predPC2, file=file.path(data_output, "DM_predPC2_tmin.tif"),
+##              overwrite=TRUE)
+
+
+## CM.tmin <- PCAs[["CM"]][["tmin"]]$loadings
+## CM.tmin.mod <- fitboost(CM.tmin, "PC1")
+## CM.tmin.mod
+## #varImpPlot(CM.tmin.mod, type=1)
+
+## ## Make the predicted loading surface
+## CM.tmin.predPC1 <- raster::predict(topostacks[["CM"]], CM.tmin.mod)
+## makeMap(CM.tmin.predPC1) +  guides(fill=guide_legend(title="PC1"))
+## ggsave("../results/topo_mod_results/CM-PC1.png", height=10, width=10)
+## raster::writeRaster(CM.tmin.predPC1, file=file.path(data_output, "CM_predPC1_tmin.tif"),
+##              overwrite=TRUE)
+
+
+## CM.tmin.mod <- fitboost(CM.tmin, "PC2")
+## CM.tmin.mod
+## CM.tmin.predPC2 <- raster::predict(topostacks[["CM"]], DM.tmin.mod)
+## makeMap(CM.tmin.predPC2) +  guides(fill=guide_legend(title="PC2"))
+## ggsave("../results/topo_mod_results/CM-PC2.png", height=10, width=10)
+## raster::writeRaster(CM.tmin.predPC2, file=file.path(data_output, "CM_predPC2_tmin.tif"),
+##              overwrite=TRUE)
+
+
+
+
+## GM.tmin <- PCAs[["GM"]][["tmin"]]$loadings
+## GM.tmin.mod <- fitboost(GM.tmin, "PC1")
+## GM.tmin.mod
+## #varImpPlot(GM.tmin.mod, type=1)
+
+## ## Make the predicted loading surface
+## GM.tmin.predPC1 <- raster::predict(topostacks[["GM"]], GM.tmin.mod)
+## makeMap(GM.tmin.predPC1) +  guides(fill=guide_legend(title="PC1"))
+## ggsave("../results/topo_mod_results/GM-PC1.png", height=10, width=10)
+## raster::writeRaster(CM.tmin.predPC1, file=file.path(data_output, "CM_predPC1_tmin.tif"),
+##              overwrite=TRUE)
+
+
+## GM.tmin.mod <- fitboost(GM.tmin, "PC2")
+## GM.tmin.mod
+## GM.tmin.predPC2 <- raster::predict(topostacks[["GM"]], DM.tmin.mod)
+## makeMap(GM.tmin.predPC2) +  guides(fill=guide_legend(title="PC2"))
+## ggsave("../results/topo_mod_results/GM-PC2.png", height=10, width=10)
 
 
 

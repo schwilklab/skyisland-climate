@@ -33,7 +33,6 @@ clim_data_2_brick <- function(df) {
 # and time period. These data to retrieve are all stored as rds files in the
 # skyisland-climate repo. Return as a data frame
 retrieve_reconstruction_df <- function(mtn, gcm=NULL, scenario=NULL, timep=NULL) {
-
   base_name <- paste(mtn, gcm, scenario, timep, sep="_")
 
   if(is.null(gcm) ) {
@@ -75,6 +74,33 @@ export_gtiff_reconstruction <- function(mtn, gcm=NULL, scenario=NULL, timep=NULL
   return()
 }
 
-# example":
+# example of reference period, using real historical observations for the
+# Chisos:
 
-export_gtiff_reconstruction("CM")
+# export_gtiff_reconstruction("CM")
+
+# Example for 2080s reconstruction of bioclim data for CM using
+# HadGEM2-CC.r1i1p1 and the high emmisions secnario:
+
+# export_gtiff_reconstruction("CM", "HadGEM2-CC.r1i1p1", "rcp85", "2080s" )
+
+
+# grab PCA scores
+
+# This object is a list containing all the PC loading rasters accessed by
+# mtn$var$PC1 etc
+PCA_topo_predictions <- readRDS(file.path(TOPO_RES_DIR, "load_predictions.RDS"))
+
+export_gtiff_predicted_PCA_loadings <- function(mtn, var, pc) {
+  writeRaster(PCA_topo_predictions[[mtn]][[var]][[pc]],
+              file.path("../results/tempdata", paste(mtn, var, pc, sep="_")),
+              format="GTiff")
+}
+
+
+## export_gtiff_predicted_PCA_loadings("CM", "tmin", "PC1")
+## export_gtiff_predicted_PCA_loadings("CM", "tmin", "PC2")
+## export_gtiff_predicted_PCA_loadings("CM", "tmax", "PC1")
+## export_gtiff_predicted_PCA_loadings("CM", "tmax", "PC2")
+
+plot(PCA_topo_predictions$DM$tmin$PC2)
